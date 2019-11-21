@@ -13,10 +13,13 @@ namespace Hangfire.Storage.SQLite.Entities
         public int StateId { get; set; }
 
         [Indexed(Name = "IX_Job_StateName", Order = 1, Unique = false)]
+        [MaxLength(DefaultValues.MaxLengthStateNameColumn)]
         public string StateName { get; set; }
 
+        [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
         public string InvocationDate { get; set; }
 
+        [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
         public string Arguments { get; set; }
 
         public DateTime CreatedAt { get; set; }

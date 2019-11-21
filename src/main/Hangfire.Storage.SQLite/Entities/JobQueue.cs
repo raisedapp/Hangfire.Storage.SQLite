@@ -13,6 +13,7 @@ namespace Hangfire.Storage.SQLite.Entities
         public int JobId { get; set; }
 
         [PrimaryKey]
+        [MaxLength(DefaultValues.MaxLengthQueueColumn)]
         public string Queue { get; set; }
 
         [Indexed(Name = "IX_JobQueue_FetchedAt", Order = 1, Unique = false)]

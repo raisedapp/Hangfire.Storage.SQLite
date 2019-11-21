@@ -8,6 +8,7 @@ namespace Hangfire.Storage.SQLite.Entities
     internal class Counter
     {
         [PrimaryKey]
+        [MaxLength(DefaultValues.MaxLengthKeyColumn)]
         public string Key { get; set; }
 
         public int Value { get; set; }

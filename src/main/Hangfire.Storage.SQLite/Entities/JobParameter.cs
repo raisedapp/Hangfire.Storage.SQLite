@@ -11,8 +11,10 @@ namespace Hangfire.Storage.SQLite.Entities
         public int JobId { get; set; }
 
         [PrimaryKey]
+        [MaxLength(DefaultValues.MaxLengthNameColumn)]
         public string Name { get; set; }
 
+        [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
         public string Value { get; set; }
     }
 }
