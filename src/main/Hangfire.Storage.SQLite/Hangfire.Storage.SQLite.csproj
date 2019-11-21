@@ -26,6 +26,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.7.6" />
     <PackageReference Include="sqlite-net-pcl" Version="1.6.292" />
   </ItemGroup>
 
