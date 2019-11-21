@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Hangfire.Storage.SQLite.Entities;
+using System;
 
 namespace Hangfire.Storage.SQLite
 {
