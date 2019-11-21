@@ -1,5 +1,6 @@
 # Hangfire.Storage.SQLite
 [![NuGet](https://buildstats.info/nuget/Hangfire.Storage.SQLite)](https://www.nuget.org/packages/Hangfire.Storage.SQLite)
+[![Build Status](https://github.com/felixclase/Hangfire.Storage.SQLite/workflows/CI-HS-SQLITE/badge.svg)](https://github.com/felixclase/Hangfire.Storage.SQLite/actions)
 [![Official Site](https://img.shields.io/badge/site-hangfire.io-blue.svg)](http://hangfire.io)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](http://opensource.org/licenses/MIT)
 
