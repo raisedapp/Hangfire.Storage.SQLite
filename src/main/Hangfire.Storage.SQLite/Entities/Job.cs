@@ -1,0 +1,30 @@
+﻿using SQLite;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Hangfire.Storage.SQLite.Entities
+{
+    internal class Job
+    {
+        [PrimaryKey, AutoIncrement]
+        public int Id { get; set; }
+
+        public int StateId { get; set; }
+
+        [Indexed(Name = "IX_Job_StateName", Order = 1, Unique = false)]
+        [MaxLength(DefaultValues.MaxLengthStateNameColumn)]
+        public string StateName { get; set; }
+
+        [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
+        public string InvocationDate { get; set; }
+
+        [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
+        public string Arguments { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        [Indexed(Name = "IX_Job_ExpireAt", Order = 2, Unique = false)]
+        public DateTime? ExpireAt { get; set; }
+    }
+}
