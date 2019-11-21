@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Version>0.0.1</Version>
+    <Authors>felixclase</Authors>
+    <Company>felixclase</Company>
+    <Copyright>Copyright © 2019 - Present</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>hangfire hangfire-storage sqlite</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-pcl" Version="1.6.292" />
+  </ItemGroup>
+
+</Project>
