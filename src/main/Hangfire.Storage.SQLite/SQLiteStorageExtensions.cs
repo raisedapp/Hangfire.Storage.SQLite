@@ -16,12 +16,12 @@ namespace Hangfire.Storage.SQLite
         /// <param name="configuration"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static IGlobalConfiguration<SQLiteStorage> UseLiteDbStorage(
+        public static IGlobalConfiguration<SQLiteStorage> UseSQLiteStorage(
             [NotNull] this IGlobalConfiguration configuration)
         {
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
             
-            var storage = new SQLiteStorage("Hangfire.db", new SQLiteStorageOptions());
+            var storage = new SQLiteStorage("Data Source=Hangfire.db;Version=3;", new SQLiteStorageOptions());
             
             return configuration.UseStorage(storage);
         }
@@ -34,7 +34,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="options"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static IGlobalConfiguration<SQLiteStorage> UseLiteDbStorage(
+        public static IGlobalConfiguration<SQLiteStorage> UseSQLiteStorage(
             [NotNull] this IGlobalConfiguration configuration,
             [NotNull] string nameOrConnectionString,
             SQLiteStorageOptions options = null)

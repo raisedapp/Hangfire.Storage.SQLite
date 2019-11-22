@@ -17,6 +17,10 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\main\Hangfire.Storage.SQLite\Hangfire.Storage.SQLite.csproj" />
   </ItemGroup>  
 
 </Project>

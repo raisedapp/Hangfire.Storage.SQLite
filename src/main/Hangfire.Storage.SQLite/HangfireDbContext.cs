@@ -49,7 +49,8 @@ namespace Hangfire.Storage.SQLite
                     DateFormatString = "yyyy-MM-dd HH:mm:ss.fff"
                 });
 
-            Database = new SQLiteConnection(connectionString);
+            Database = new SQLiteConnection(connectionString, SQLiteOpenFlags.ReadWrite |
+                SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex, storeDateTimeAsTicks: true);
 
             ConnectionId = Guid.NewGuid().ToString();
         }
