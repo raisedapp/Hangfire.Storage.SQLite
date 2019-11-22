@@ -40,14 +40,34 @@ namespace Hangfire.Storage.SQLite
             _checkInterval = checkInterval;
         }
 
+        /// <summary>
+        /// Run expiration manager to remove outdated records
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
         public void Execute([NotNull] BackgroundProcessContext context)
         {
             Execute(context.StoppingToken);
         }
 
+        /// <summary>
+        /// Run expiration manager to remove outdated records
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
         public void Execute(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            HangfireDbContext connection = _storage.CreateAndOpenConnection();
+            DateTime now = DateTime.UtcNow;
+
+            /*
+            RemoveExpiredRecord(connection.Job, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            RemoveExpiredRecord(connection.StateDataAggregatedCounter, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            RemoveExpiredRecord(connection.StateDataCounter, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            RemoveExpiredRecord(connection.StateDataHash, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            RemoveExpiredRecord(connection.StateDataSet, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            RemoveExpiredRecord(connection.StateDataList, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+
+            cancellationToken.WaitHandle.WaitOne(_checkInterval);
+            */
         }
     }
 }
