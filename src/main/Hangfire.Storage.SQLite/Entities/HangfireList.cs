@@ -6,7 +6,7 @@ using System.Text;
 namespace Hangfire.Storage.SQLite.Entities
 {
     [Table("List")]
-    internal class HangfireList
+    public class HangfireList
     {
         [PrimaryKey]
         public string ListPK { get { return Id + "_" + Key; } }

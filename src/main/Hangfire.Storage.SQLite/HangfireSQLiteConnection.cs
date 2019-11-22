@@ -9,7 +9,7 @@ using Hangfire.Storage.SQLite.Entities;
 
 namespace Hangfire.Storage.SQLite
 {
-    public class SQLiteConnection : JobStorageConnection
+    public class HangfireSQLiteConnection : JobStorageConnection
     {
         private readonly SQLiteStorageOptions _storageOptions;
 
@@ -22,13 +22,13 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Ctor using default storage options
         /// </summary>
-        public SQLiteConnection(HangfireDbContext database, PersistentJobQueueProviderCollection queueProviders)
+        public HangfireSQLiteConnection(HangfireDbContext database, PersistentJobQueueProviderCollection queueProviders)
             : this(database, new SQLiteStorageOptions(), queueProviders)
         {
         }
 
 #pragma warning disable 1591
-        public SQLiteConnection(
+        public HangfireSQLiteConnection(
             HangfireDbContext database,
             SQLiteStorageOptions storageOptions,
             PersistentJobQueueProviderCollection queueProviders)

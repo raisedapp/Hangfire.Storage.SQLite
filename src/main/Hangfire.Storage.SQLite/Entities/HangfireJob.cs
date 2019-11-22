@@ -6,7 +6,7 @@ using System.Text;
 namespace Hangfire.Storage.SQLite.Entities
 {
     [Table("Job")]
-    internal class HangfireJob
+    public class HangfireJob
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

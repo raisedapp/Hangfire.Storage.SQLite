@@ -5,7 +5,8 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    internal class Server
+    [Table("Server")]
+    public class HangfireServer
     {
         [PrimaryKey]
         [MaxLength(DefaultValues.MaxLengthIdColumn)]

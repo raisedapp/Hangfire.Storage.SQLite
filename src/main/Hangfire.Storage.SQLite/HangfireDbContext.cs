@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Hangfire.Storage.SQLite.Entities;
+using Newtonsoft.Json;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +13,11 @@ namespace Hangfire.Storage.SQLite
     public class HangfireDbContext
     {
         private readonly string _prefix;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public SQLiteConnection Database { get; }
 
         /// <summary>
         /// 
@@ -42,6 +49,8 @@ namespace Hangfire.Storage.SQLite
                     DateFormatString = "yyyy-MM-dd HH:mm:ss.fff"
                 });
 
+            Database = new SQLiteConnection(connectionString);
+
             ConnectionId = Guid.NewGuid().ToString();
         }
 
@@ -52,9 +61,18 @@ namespace Hangfire.Storage.SQLite
         /// <param name="connectionString"></param>
         /// <param name="prefix"></param>
         /// <returns></returns>
-        internal static HangfireDbContext Instance(string connectionString, string prefix)
+        internal static HangfireDbContext Instance(string connectionString, string prefix = "hangfire")
         {
-            throw new NotImplementedException();
+            if (_instance != null) return _instance;
+            lock (Locker)
+            {
+                if (_instance == null)
+                {
+                    _instance = new HangfireDbContext(connectionString, prefix);
+                }
+            }
+
+            return _instance;
         }
 
         /// <summary>
@@ -63,6 +81,48 @@ namespace Hangfire.Storage.SQLite
         public void Init(SQLiteStorageOptions storageOptions)
         {
             StorageOptions = storageOptions;
+
+            Database.CreateTable<AggregatedCounter>();
+            Database.CreateTable<Counter>();
+            Database.CreateTable<HangfireJob>();
+            Database.CreateTable<HangfireList>();
+            Database.CreateTable<Hash>();
+            Database.CreateTable<JobParameter>();
+            Database.CreateTable<JobQueue>();
+            Database.CreateTable<HangfireServer>();
+            Database.CreateTable<Set>();
+            Database.CreateTable<State>();
+
+            AggregatedCounterRepository = Database.Table<AggregatedCounter>();
+            CounterRepository = Database.Table<Counter>();
+            HangfireJobRepository = Database.Table<HangfireJob>();
+            HangfireListRepository = Database.Table<HangfireList>();
+            HashRepository =  Database.Table<Hash>();
+            JobParameterRepository = Database.Table<JobParameter>();
+            JobQueueRepository = Database.Table<JobQueue>();
+            HangfireServerRepository = Database.Table<HangfireServer>();
+            SetRepository = Database.Table<Set>();
+            StateRepository = Database.Table<State>();
         }
+
+        public TableQuery<AggregatedCounter> AggregatedCounterRepository { get; private set; }
+
+        public TableQuery<Counter> CounterRepository { get; private set; }
+
+        public TableQuery<HangfireJob> HangfireJobRepository { get; private set; }
+
+        public TableQuery<HangfireList> HangfireListRepository { get; private set; }
+
+        public TableQuery<Hash> HashRepository { get; private set; }
+
+        public TableQuery<JobParameter> JobParameterRepository { get; private set; }
+
+        public TableQuery<JobQueue> JobQueueRepository { get; private set; }
+
+        public TableQuery<HangfireServer> HangfireServerRepository { get; private set; }
+
+        public TableQuery<Set> SetRepository { get; private set; }
+
+        public TableQuery<State> StateRepository { get; private set; }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    internal class JobQueue
+    public class JobQueue
     {
         [PrimaryKey]
         public string JobQueuePK { get { return Id + "_" + Queue; } }

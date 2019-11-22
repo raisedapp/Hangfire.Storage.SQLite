@@ -54,7 +54,7 @@ namespace Hangfire.Storage.SQLite
 
         public override IStorageConnection GetConnection()
         {
-            return new SQLiteConnection(Connection, _storageOptions, QueueProviders);
+            return new HangfireSQLiteConnection(Connection, _storageOptions, QueueProviders);
         }
 
         public override IMonitoringApi GetMonitoringApi()

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    internal class Set
+    public class Set
     {
         [PrimaryKey]
         public string SetPK { get { return Key + "_" + Value; } }
