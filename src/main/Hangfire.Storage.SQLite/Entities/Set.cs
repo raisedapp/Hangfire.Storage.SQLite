@@ -7,8 +7,10 @@ namespace Hangfire.Storage.SQLite.Entities
 {
     public class Set
     {
+        private string _setPK = string.Empty;
+        
         [PrimaryKey]
-        public string SetPK { get { return Key + "_" + Value; } }
+        public string SetPK { get { return Key + "_" + Value; } set { _setPK = value; } }
 
         [MaxLength(DefaultValues.MaxLengthKeyColumn)]
         [Indexed(Name = "IX_Set_Key", Order = 1, Unique = false)]

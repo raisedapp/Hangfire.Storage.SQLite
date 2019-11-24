@@ -7,8 +7,13 @@ namespace Hangfire.Storage.SQLite.Entities
 {
     public class Hash
     {
+        private string _hashPK = string.Empty;
+            
         [PrimaryKey]
-        public string HashPK { get { return Key + "_" + Field; }}
+        public string HashPK { 
+            get => Key + "_" + Field;
+            set => _hashPK = value;
+        }
 
         [MaxLength(DefaultValues.MaxLengthKeyColumn)]
         [Indexed(Name = "IX_Hash_Key", Order = 1, Unique = false)]

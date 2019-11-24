@@ -21,7 +21,7 @@ namespace Hangfire.Storage.SQLite
         {
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
             
-            var storage = new SQLiteStorage("Data Source=Hangfire.db;Version=3;", new SQLiteStorageOptions());
+            var storage = new SQLiteStorage("Hangfire.db", new SQLiteStorageOptions());
             
             return configuration.UseStorage(storage);
         }
