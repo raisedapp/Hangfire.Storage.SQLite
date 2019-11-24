@@ -3,8 +3,10 @@ using Hangfire.Logging;
 using Hangfire.Server;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
+using Hangfire.Storage.SQLite.Entities;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -52,16 +54,15 @@ namespace Hangfire.Storage.SQLite
             Logger.DebugFormat("Aggregating records in 'Counter' table...");
 
             long removedCount = 0;
-            /*
+            
             do
             {
-                using (var storageConnection = (LiteDbConnection)_storage.GetConnection())
+                using (var storageConnection = (HangfireSQLiteConnection)_storage.GetConnection())
                 {
-                    var database = storageConnection.Database;
+                    var storageDb = storageConnection.Database;
 
-                    var recordsToAggregate = database
-                        .StateDataCounter
-                        .FindAll()
+                    var recordsToAggregate = storageDb
+                        .CounterRepository
                         .Take(NumberOfRecordsInSinglePass)
                         .ToList();
 
@@ -73,24 +74,25 @@ namespace Hangfire.Storage.SQLite
                             ExpireAt = _.Max(x => x.ExpireAt)
                         });
 
-                    foreach (var id in recordsToAggregate.Select(_ => _.Id))
+                    foreach (var id in recordsToAggregate.Select(_ => _.Key))
                     {
-                        database
-                            .StateDataCounter
-                            .Delete(id);
+                        /*
+                        storageDb
+                            .CounterRepository
+                            .Delete(key);
+                        */
                         removedCount++;
                     }
 
                     foreach (var item in recordsToMerge)
                     {
-                        AggregatedCounter aggregatedItem = database
-                            .StateDataAggregatedCounter
-                            .Find(_ => _.Key == item.Key)
-                            .FirstOrDefault();
+                        AggregatedCounter aggregatedItem = storageDb
+                            .AggregatedCounterRepository
+                            .FirstOrDefault(_ => _.Key == item.Key);
 
                         if (aggregatedItem != null)
                         {
-                            var aggregatedCounters = database.StateDataAggregatedCounter.Find(_ => _.Key == item.Key);
+                            var aggregatedCounters = storageDb.AggregatedCounterRepository.Where(_ => _.Key == item.Key).ToList();
 
                             foreach (var counter in aggregatedCounters)
                             {
@@ -98,16 +100,15 @@ namespace Hangfire.Storage.SQLite
                                 counter.ExpireAt = item.ExpireAt > aggregatedItem.ExpireAt
                                     ? (item.ExpireAt.HasValue ? (DateTime?)item.ExpireAt.Value : null)
                                     : (aggregatedItem.ExpireAt.HasValue ? (DateTime?)aggregatedItem.ExpireAt.Value : null);
-                                database.StateDataAggregatedCounter.Update(counter);
+                                storageDb.Database.Update(counter);
                             }
                         }
                         else
                         {
-                            database
-                                .StateDataAggregatedCounter
+                            storageDb
+                                .Database
                                 .Insert(new AggregatedCounter
                                 {
-                                    Id = ObjectId.NewObjectId(),
                                     Key = item.Key,
                                     Value = item.Value,
                                     ExpireAt = item.ExpireAt
@@ -124,7 +125,6 @@ namespace Hangfire.Storage.SQLite
             } while (removedCount >= NumberOfRecordsInSinglePass);
 
             cancellationToken.WaitHandle.WaitOne(_interval);
-            */
         }
 
         /// <summary>
