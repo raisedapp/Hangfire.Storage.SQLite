@@ -9,6 +9,9 @@ namespace Hangfire.Storage.SQLite.Entities
     {
         [PrimaryKey]
         [MaxLength(DefaultValues.MaxLengthKeyColumn)]
+        public string Id { get; set; }
+
+        [MaxLength(DefaultValues.MaxLengthKeyColumn)]
         public string Key { get; set; }
 
         public decimal Value { get; set; }

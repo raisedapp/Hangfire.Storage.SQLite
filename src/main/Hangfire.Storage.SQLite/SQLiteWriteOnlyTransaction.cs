@@ -125,6 +125,7 @@ namespace Hangfire.Storage.SQLite
             {
                 _.Database.Insert(new Counter
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Key = key,
                     Value = -1L
                 });
@@ -143,6 +144,7 @@ namespace Hangfire.Storage.SQLite
             {
                 _.Database.Insert(new Counter
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Key = key,
                     Value = -1L,
                     ExpireAt = DateTime.UtcNow.Add(expireIn)
@@ -180,6 +182,7 @@ namespace Hangfire.Storage.SQLite
             {
                 _.Database.Insert(new Counter
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Key = key,
                     Value = +1L
                 });
@@ -192,6 +195,7 @@ namespace Hangfire.Storage.SQLite
             {
                 _.Database.Insert(new Counter
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Key = key,
                     Value = +1L,
                     ExpireAt = DateTime.UtcNow.Add(expireIn)
@@ -301,6 +305,7 @@ namespace Hangfire.Storage.SQLite
                         CreatedAt = DateTime.UtcNow,
                         Data = state.ToString()
                     });
+
                     _.Database.Update(job);
                 }
             });        

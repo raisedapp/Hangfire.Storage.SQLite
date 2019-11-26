@@ -67,6 +67,7 @@ namespace Hangfire.Storage.SQLite
                     Data = SerializationHelper.Serialize(data, SerializationOption.User),
                     LastHeartbeat = DateTime.UtcNow
                 };
+
                 DbContext.Database.Insert(server);
             }
             else
@@ -90,16 +91,29 @@ namespace Hangfire.Storage.SQLite
             {
                 var invocationData = InvocationData.SerializeJob(job);
 
-                var jobDto = new JobDto
+                var newJob = new HangfireJob()
                 {
                     InvocationData = SerializationHelper.Serialize(invocationData, SerializationOption.User),
                     Arguments = invocationData.Arguments,
-                    Parameters = parameters.ToDictionary(kv => kv.Key, kv => kv.Value),
                     CreatedAt = createdAt,
                     ExpireAt = createdAt.Add(expireIn)
                 };
 
-                var jobId = jobDto.Id;
+                DbContext.Database.Insert(newJob);
+
+                var parametersArray = parameters.ToArray();
+
+                foreach (var parameter in parametersArray) 
+                {
+                    DbContext.Database.Insert(new JobParameter()
+                    {
+                        JobId = newJob.Id,
+                        Name = parameter.Key,
+                        Value = parameter.Value
+                    });
+                }
+
+                var jobId = newJob.Id;
 
                 return Convert.ToString(jobId);
             }

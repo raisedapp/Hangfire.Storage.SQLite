@@ -74,13 +74,11 @@ namespace Hangfire.Storage.SQLite
                             ExpireAt = _.Max(x => x.ExpireAt)
                         });
 
-                    foreach (var id in recordsToAggregate.Select(_ => _.Key))
+                    foreach (var id in recordsToAggregate.Select(_ => _.Id))
                     {
-                        /*
                         storageDb
                             .CounterRepository
-                            .Delete(key);
-                        */
+                            .Delete(_ => _.Id == id);
                         removedCount++;
                     }
 
