@@ -28,7 +28,7 @@ namespace Hangfire.Storage.SQLite
         {
         }
 
-#pragma warning disable 1591
+        #pragma warning disable 1591
         public HangfireSQLiteConnection(
             HangfireDbContext database,
             SQLiteStorageOptions storageOptions,
@@ -158,7 +158,7 @@ namespace Hangfire.Storage.SQLite
                 .Where(_ => _.Key == key)
                 .AsEnumerable()
                 .Select(_ => new { _.Field, _.Value })
-                .ToDictionary(x => x.Field, x => Convert.ToString(x.Value));
+                .ToDictionary(x => x.Field, x => x.Value);
 
             return result.Count != 0 ? result : null;
         }
