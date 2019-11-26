@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Hangfire.States;
+using Hangfire.Storage.SQLite.Entities;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -32,20 +34,19 @@ namespace Hangfire.Storage.SQLite
         
         public override void AddJobState(string jobId, IState state)
         {
-            QueueCommand(x =>
+            QueueCommand(_ =>
             {
-                /*var iJobId = int.Parse(jobId);
-                var job = x.Job.FindOne(_ => _.Id == iJobId);
-                job.StateHistory.Add(new LiteState
+                var iJobId = int.Parse(jobId);
+                var jobState = new State()
                 {
                     JobId = iJobId,
                     Name = state.Name,
                     Reason = state.Reason,
                     CreatedAt = DateTime.UtcNow,
-                    Data = state.SerializeData()
-                });
-                x.Job.Update(job);
-                */
+                    Data = state.ToString()
+                };
+
+                _.Database.Insert(jobState);
             });            
         }
 
@@ -78,26 +79,28 @@ namespace Hangfire.Storage.SQLite
         /// <param name="score"></param>        
         public override void AddToSet(string key, string value, double score)
         {
-            QueueCommand(x =>
+            QueueCommand(_ =>
             {
-                /*var liteSet = new LiteSet
+                var set = new Set
                 {
-                    Score = score,
+                    Score = score.ToInt64(),
                     Key = key,
                     Value = value,
                     ExpireAt = null
                 };
-                var oldSet = x.StateDataSet.Find(_ => _.Key == key && Convert.ToString(_.Value) == value).FirstOrDefault();
+
+                var oldSet = _.SetRepository.FirstOrDefault(x => x.Key == key && x.Value == value);
 
                 if (oldSet == null)
                 {
-                    x.StateDataSet.Insert(liteSet);
+                    _.Database.Insert(set);
                 }
                 else
                 {
-                    liteSet.Id = oldSet.Id;
-                    x.StateDataSet.Update(liteSet);
-                }*/
+                    set.Value = value;
+                    set.Score = score.ToInt64();
+                    _.Database.Update(set);
+                }
             });
         }
 
@@ -116,15 +119,15 @@ namespace Hangfire.Storage.SQLite
         /// <param name="expireIn"></param>        
         public override void DecrementCounter(string key)
         {
-            QueueCommand(x => { });
-                /*
-                x.StateDataCounter.Insert(new Counter
+            QueueCommand(_ => 
+            {
+                _.Database.Insert(new Counter
                 {
-                    Id = ObjectId.NewObjectId(),
                     Key = key,
-                    Value = -1L,
-                    ExpireAt = DateTime.UtcNow.Add(expireIn)
-                })*/
+                    Value = -1L
+                });
+            });
+
         }
         
         /// <summary>
@@ -134,15 +137,15 @@ namespace Hangfire.Storage.SQLite
         /// <param name="expireIn"></param>
         public override void DecrementCounter(string key, TimeSpan expireIn)
         {
-            QueueCommand(x => { });
-            /*    x.StateDataCounter.Insert(new Counter
+            QueueCommand(_ =>
             {
-                Id = ObjectId.NewObjectId(),
-                Key = key,
-                Value = -1L,
-                ExpireAt = DateTime.UtcNow.Add(expireIn)
-            }));        
-            */
+                _.Database.Insert(new Counter
+                {
+                    Key = key,
+                    Value = -1L,
+                    ExpireAt = DateTime.UtcNow.Add(expireIn)
+                });
+            });
         }
 
         /// <summary>
@@ -152,13 +155,17 @@ namespace Hangfire.Storage.SQLite
         /// <param name="expireIn"></param>        
         public override void ExpireJob(string jobId, TimeSpan expireIn)
         {
-            QueueCommand(x => { });
-            /*{
+            QueueCommand(_ => 
+            {
                 var iJobId = int.Parse(jobId);
-                var job = x.Job.FindOne(_ => _.Id == iJobId);
-                job.ExpireAt = DateTime.UtcNow.Add(expireIn);
-                x.Job.Update(job);
-            });  */      
+                var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
+                
+                if (job != null) 
+                {
+                    job.ExpireAt = DateTime.UtcNow.Add(expireIn);
+                    _.Database.Update(job);
+                }
+            });   
         }
         
         /// <summary>
@@ -167,29 +174,27 @@ namespace Hangfire.Storage.SQLite
         /// <param name="key"></param>
         public override void IncrementCounter(string key)
         {
-            QueueCommand(x => { });
-            /*x.StateDataCounter.Insert(new Counter
+            QueueCommand(_ => 
+            {
+                _.Database.Insert(new Counter
                 {
-                    Id = ObjectId.NewObjectId(),
                     Key = key,
                     Value = +1L
                 });
-            });        */
+            });
         }
 
         public override void IncrementCounter(string key, TimeSpan expireIn)
         {
-            /*
-            var counter = new Counter
+            QueueCommand(_ =>
             {
-                Id = ObjectId.NewObjectId(),
-                Key = key,
-                Value = +1L,
-                ExpireAt = DateTime.UtcNow.Add(expireIn)
-            };
-            */
-            
-            QueueCommand(x => { });
+                _.Database.Insert(new Counter
+                {
+                    Key = key,
+                    Value = +1L,
+                    ExpireAt = DateTime.UtcNow.Add(expireIn)
+                });
+            });
         }
         
         /// <summary>
@@ -199,15 +204,14 @@ namespace Hangfire.Storage.SQLite
         /// <param name="value"></param>
         public override void InsertToList(string key, string value)
         {
-            QueueCommand(x => { });
-            
-            /*x.StateDataList.Insert(new LiteList
+            QueueCommand(_ => 
+            {
+                _.Database.Insert(new HangfireList
                 {
-                    Id = ObjectId.NewObjectId(),
                     Key = key,
                     Value = value
                 });
-            });*/
+            });
         }
         
         /// <summary>
@@ -216,15 +220,17 @@ namespace Hangfire.Storage.SQLite
         /// <param name="jobId"></param>
         public override void PersistJob(string jobId)
         {
-            QueueCommand(x => { });
-            
-            /*{
+            QueueCommand(_ => 
+            {
                 var iJobId = int.Parse(jobId);
-                var job = x.Job.FindOne(_ => _.Id == iJobId);
-                job.ExpireAt = null;
-                x.Job.Update(job);
-            });       
-            */
+                var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
+
+                if (job != null) 
+                {
+                    job.ExpireAt = null;
+                    _.Database.Update(job);
+                }
+            });
         }
         
         /// <summary>
@@ -234,9 +240,10 @@ namespace Hangfire.Storage.SQLite
         /// <param name="value"></param>
         public override void RemoveFromList(string key, string value)
         {
-            QueueCommand(x => { });
-            //x.StateDataList.Delete(_ => _.Key == key && Convert.ToString(_.Value) == value);
-            //});
+            QueueCommand(_ => 
+            {
+                _.HangfireListRepository.Delete(x => x.Key == key && x.Value == value);
+            });
         }
 
         /// <summary>
@@ -246,8 +253,10 @@ namespace Hangfire.Storage.SQLite
         /// <param name="value"></param>        
         public override void RemoveFromSet(string key, string value)
         {
-            QueueCommand(x => { });
-            //x.StateDataSet.Delete(_ => _.Key == key && Convert.ToString(_.Value) == value); });
+            QueueCommand(_ => 
+            {
+                _.HangfireListRepository.Delete(x => x.Key == key && x.Value == value);
+            });
         }
 
         /// <summary>
@@ -260,8 +269,10 @@ namespace Hangfire.Storage.SQLite
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            QueueCommand(x => { });
-            //x.StateDataHash.Delete(_ => _.Key == key); });
+            QueueCommand(_ => 
+            {
+                _.HashRepository.Delete(x => x.Key == key);
+            });
         }
 
         /// <summary>
@@ -271,22 +282,26 @@ namespace Hangfire.Storage.SQLite
         /// <param name="state"></param>        
         public override void SetJobState(string jobId, IState state)
         {
-            QueueCommand(x => { });
-            
-            /*{
+            QueueCommand(_ => 
+            {
                 var iJobId = int.Parse(jobId);
-                var job = x.Job.FindOne(_ => _.Id == iJobId);
-                job.StateName = state.Name;
-                job.StateHistory.Add(new LiteState
+                var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
+
+                if (job != null)
                 {
-                    JobId = iJobId,
-                    Name = state.Name,
-                    Reason = state.Reason,
-                    CreatedAt = DateTime.UtcNow,
-                    Data = state.SerializeData()
-                });
-                x.Job.Update(job);
-            });*/        
+                    job.StateName = state.Name;
+
+                    _.Database.Insert(new State
+                    {
+                        JobId = iJobId,
+                        Name = state.Name,
+                        Reason = state.Reason,
+                        CreatedAt = DateTime.UtcNow,
+                        Data = state.ToString()
+                    });
+                    _.Database.Update(job);
+                }
+            });        
         }
         
         /// <summary>
@@ -307,10 +322,10 @@ namespace Hangfire.Storage.SQLite
             {
                 var field = keyValuePair.Key;
                 var value = keyValuePair.Value;
-                /*
-                QueueCommand(x =>
+                
+                QueueCommand(_ =>
                 {
-                    var state = new LiteHash
+                    var hash = new Hash
                     {
                         Key = key,
                         Field = field,
@@ -318,18 +333,16 @@ namespace Hangfire.Storage.SQLite
                         ExpireAt = null
                     };
 
-                    var oldHash = x.StateDataHash.Find(_ => _.Key == key && _.Field == field).FirstOrDefault();
+                    var oldHash = _.HashRepository.FirstOrDefault(x => x.Key == key && x.Field == field);
                     if (oldHash == null)
                     {
-                        x.StateDataHash.Insert(state);
+                        _.Database.Insert(hash);
                     }
                     else
                     {
-                        state.Id = oldHash.Id;
-                        x.StateDataHash.Update(state);
-                    }  
+                        _.Database.Update(hash);
+                    }
                 });
-                */
             }        
         }
         
@@ -341,25 +354,24 @@ namespace Hangfire.Storage.SQLite
         /// <param name="keepEndingAt"></param>
         public override void TrimList(string key, int keepStartingFrom, int keepEndingAt)
         {
-            QueueCommand(x =>
+            QueueCommand(_ =>
             {
                 var start = keepStartingFrom + 1;
                 var end = keepEndingAt + 1;
                 
-                /*
-                var items =x.StateDataList
-                    .Find(_ => _.Key == key)
+                var items = _.HangfireListRepository
+                    .Where(x => x.Key == key)
                     .Reverse()
                     .Select((data, i) => new {Index = i + 1, Data = data.Id})
-                    .Where(_ => !((_.Index >= start) && (_.Index <= end)))
-                    .Select(_ => _.Data)
+                    .Where(x => !((x.Index >= start) && (x.Index <= end)))
+                    .Select(x => x.Data)
                     .ToList();
+
                 foreach(var id in items)
                 {
-                    x.StateDataList.Delete(_=>_.Id == id);
+                    _.HangfireListRepository.Delete(x => x.Id == id);
                 }
-                */
-            });        
+            });
         }
     }
 }
