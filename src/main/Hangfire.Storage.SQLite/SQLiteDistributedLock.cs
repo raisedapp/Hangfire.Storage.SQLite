@@ -224,7 +224,7 @@ namespace Hangfire.Storage.SQLite
             {
                 // Delete expired locks
                 _dbContext.DistributedLockRepository.
-                    Delete(x => x.Resource == _resource && x.ExpireAt.ToUniversalTime() < DateTime.UtcNow);
+                    Delete(x => x.Resource == _resource && x.ExpireAt < DateTime.UtcNow);
             }
             catch (Exception ex)
             {

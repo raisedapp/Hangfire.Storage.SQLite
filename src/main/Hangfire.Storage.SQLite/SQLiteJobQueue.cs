@@ -9,7 +9,7 @@ namespace Hangfire.Storage.SQLite
     {
         private readonly SQLiteStorageOptions _storageOptions;
 
-        private readonly HangfireDbContext _connection;
+        private readonly HangfireDbContext _dbContext;
 
         /// <summary>
         /// 
@@ -19,7 +19,7 @@ namespace Hangfire.Storage.SQLite
         public SQLiteJobQueue(HangfireDbContext connection, SQLiteStorageOptions storageOptions)
         {
             _storageOptions = storageOptions ?? throw new ArgumentNullException(nameof(storageOptions));
-            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _dbContext = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
         /// <summary>
