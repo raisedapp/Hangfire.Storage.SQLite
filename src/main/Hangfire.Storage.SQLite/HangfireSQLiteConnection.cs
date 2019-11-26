@@ -17,7 +17,7 @@ namespace Hangfire.Storage.SQLite
 
         private static readonly object _lock = new object();
 
-        public HangfireDbContext Database { get; }
+        public HangfireDbContext DbContext { get; }
 
         /// <summary>
         /// Ctor using default storage options
@@ -33,14 +33,14 @@ namespace Hangfire.Storage.SQLite
             SQLiteStorageOptions storageOptions,
             PersistentJobQueueProviderCollection queueProviders)
         {
-            Database = database ?? throw new ArgumentNullException(nameof(database));
+            DbContext = database ?? throw new ArgumentNullException(nameof(database));
             _storageOptions = storageOptions ?? throw new ArgumentNullException(nameof(storageOptions));
             _queueProviders = queueProviders ?? throw new ArgumentNullException(nameof(queueProviders));
         }
 
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
-            return new SQLiteDistributedLock($"HangFire:{resource}", timeout, Database, _storageOptions);
+            return new SQLiteDistributedLock($"HangFire:{resource}", timeout, DbContext, _storageOptions);
         }
 
         public override void AnnounceServer(string serverId, ServerContext context)
@@ -51,30 +51,30 @@ namespace Hangfire.Storage.SQLite
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
 
-            //var data = new ServerData
-            //{
-            //    WorkerCount = context.WorkerCount,
-            //    Queues = context.Queues,
-            //    StartedAt = DateTime.UtcNow
-            //};
+            var data = new ServerData
+            {
+                WorkerCount = context.WorkerCount,
+                Queues = context.Queues,
+                StartedAt = DateTime.UtcNow
+            };
 
-            //var server = Database.Server.FindById(serverId);
-            //if (server == null)
-            //{
-            //    server = new Entities.Server
-            //    {
-            //        Id = serverId,
-            //        Data = SerializationHelper.Serialize(data, SerializationOption.User),
-            //        LastHeartbeat = DateTime.UtcNow
-            //    };
-            //    Database.Server.Insert(server);
-            //}
-            //else
-            //{
-            //    server.LastHeartbeat = DateTime.UtcNow;
-            //    server.Data = SerializationHelper.Serialize(data, SerializationOption.User);
-            //    Database.Server.Update(server);
-            //}
+            var server = DbContext.HangfireServerRepository.SingleOrDefault(_ => _.Id == serverId);
+            if (server == null)
+            {
+                server = new HangfireServer
+                {
+                    Id = serverId,
+                    Data = SerializationHelper.Serialize(data, SerializationOption.User),
+                    LastHeartbeat = DateTime.UtcNow
+                };
+                DbContext.Database.Insert(server);
+            }
+            else
+            {
+                server.LastHeartbeat = DateTime.UtcNow;
+                server.Data = SerializationHelper.Serialize(data, SerializationOption.User);
+                DbContext.Database.Update(server);
+            }
         }
 
         public override string CreateExpiredJob(Job job, IDictionary<string, string> parameters,
@@ -90,11 +90,11 @@ namespace Hangfire.Storage.SQLite
             {
                 var invocationData = InvocationData.SerializeJob(job);
 
-                var jobDto = new HangfireJob
+                var jobDto = new JobDto
                 {
-                    //InvocationData = SerializationHelper.Serialize(invocationData, SerializationOption.User),
+                    InvocationData = SerializationHelper.Serialize(invocationData, SerializationOption.User),
                     Arguments = invocationData.Arguments,
-                    //Parameters = parameters.ToDictionary(kv => kv.Key, kv => kv.Value),
+                    Parameters = parameters.ToDictionary(kv => kv.Key, kv => kv.Value),
                     CreatedAt = createdAt,
                     ExpireAt = createdAt.Add(expireIn)
                 };
@@ -107,7 +107,7 @@ namespace Hangfire.Storage.SQLite
 
         public override IWriteOnlyTransaction CreateWriteTransaction()
         {
-            return new SQLiteWriteOnlyTransaction(Database, _queueProviders);
+            return new SQLiteWriteOnlyTransaction(DbContext, _queueProviders);
         }
 
         public override IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
@@ -115,21 +115,20 @@ namespace Hangfire.Storage.SQLite
             if (queues == null || queues.Length == 0)
                 throw new ArgumentNullException(nameof(queues));
 
-            //var providers = queues
-            //    .Select(queue => _queueProviders.GetProvider(queue))
-            //    .Distinct()
-            //    .ToArray();
+            var providers = queues
+                .Select(queue => _queueProviders.GetProvider(queue))
+                .Distinct()
+                .ToArray();
 
-            //if (providers.Length != 1)
-            //{
-            //    throw new InvalidOperationException(
-            //        $"Multiple provider instances registered for queues: {string.Join(", ", queues)}. You should choose only one type of persistent queues per server instance.");
-            //}
+            if (providers.Length != 1)
+            {
+                throw new InvalidOperationException(
+                    $"Multiple provider instances registered for queues: {string.Join(", ", queues)}. You should choose only one type of persistent queues per server instance.");
+            }
 
-            //var persistentQueue = providers[0].GetJobQueue(Database);
-            //return persistentQueue.Dequeue(queues, cancellationToken);
+            var persistentQueue = providers[0].GetJobQueue(DbContext);
 
-            return null;
+            return persistentQueue.Dequeue(queues, cancellationToken);
         }
 
         public override Dictionary<string, string> GetAllEntriesFromHash(string key)
@@ -139,16 +138,14 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentNullException(nameof(key));
             }
 
-            //var result = Database
-            //    .StateDataHash
-            //    .Find(_ => _.Key == key)
-            //    .AsEnumerable()
-            //    .Select(_ => new { _.Field, _.Value })
-            //    .ToDictionary(x => x.Field, x => Convert.ToString(x.Value));
+            var result = DbContext
+                .HashRepository
+                .Where(_ => _.Key == key)
+                .AsEnumerable()
+                .Select(_ => new { _.Field, _.Value })
+                .ToDictionary(x => x.Field, x => Convert.ToString(x.Value));
 
-            //return result.Count != 0 ? result : null;
-
-            return new Dictionary<string, string>();
+            return result.Count != 0 ? result : null;
         }
 
         public override HashSet<string> GetAllItemsFromSet(string key)
@@ -158,12 +155,11 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentNullException(nameof(key));
             }
 
-            //var result = Database
-            //    .StateDataSet
-            //    .Find(_ => _.Key == key)
-            //    .OrderBy(_ => _.Id)
-            //    .Select(_ => _.Value)
-            //    .ToList();
+            var result = DbContext
+                .SetRepository
+                .Where(_ => _.Key == key)
+                .Select(_ => _.Value)
+                .ToList();
 
             return new HashSet<string>();
         }
@@ -180,16 +176,14 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentException("The 'toScore' value must be higher or equal to the 'fromScore' value.");
             }
 
-            //return Database
-            //    .StateDataSet
-            //    .Find(_ => _.Key == key &&
-            //          _.Score >= fromScore &&
-            //           _.Score <= toScore)
-            //    .OrderBy(_ => _.Score)
-            //    .Select(_ => _.Value)
-            //    .FirstOrDefault() as string;
-
-            return string.Empty;
+            return DbContext
+                .SetRepository
+                .Where(_ => _.Key == key &&
+                      _.Score >= fromScore.ToInt64() &&
+                       _.Score <= toScore.ToInt64())
+                .OrderBy(_ => _.Score)
+                .Select(_ => _.Value)
+                .FirstOrDefault() as string;
         }
 
         public override JobData GetJobData(string jobId)
@@ -197,31 +191,32 @@ namespace Hangfire.Storage.SQLite
             if (jobId == null)
                 throw new ArgumentNullException(nameof(jobId));
 
+            /*
             var iJobId = int.Parse(jobId);
-            //var jobData = Database
-            //    .Job
-            //    .Find(_ => _.Id == iJobId)
-            //    .FirstOrDefault();
+            var jobData = DbContext
+                .Find(_ => _.Id == iJobId)
+                .FirstOrDefault();
 
-            //if (jobData == null)
-            //    return null;
+            if (jobData == null)
+                return null;
 
             //// TODO: conversion exception could be thrown.
-            //var invocationData = SerializationHelper.Deserialize<InvocationData>(jobData.InvocationData,
-            //    SerializationOption.User);
-            //invocationData.Arguments = jobData.Arguments;
+            var invocationData = SerializationHelper.Deserialize<InvocationData>(jobData.InvocationData,
+                SerializationOption.User);
+            invocationData.Arguments = jobData.Arguments;
 
-            //Job job = null;
-            //JobLoadException loadException = null;
+            Job job = null;
+            JobLoadException loadException = null;
 
-            //try
-            //{
-            //    job = invocationData.Deserialize();
-            //}
-            //catch (JobLoadException ex)
-            //{
-            //    loadException = ex;
-            //}
+            try
+            {
+                job = invocationData.Deserialize();
+            }
+            catch (JobLoadException ex)
+            {
+                loadException = ex;
+            }
+            */
 
             return new JobData
             {
@@ -240,17 +235,14 @@ namespace Hangfire.Storage.SQLite
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            //var iJobId = int.Parse(id);
-            //var parameters = Database
-            //    .Job
-            //    .Find(j => j.Id == iJobId)
-            //    .Select(job => job.Parameters)
-            //    .FirstOrDefault();
+            var iJobId = int.Parse(id);
+            var value = DbContext
+                .JobParameterRepository
+                .Where(_ => _.JobId == iJobId && _.Name == name)
+                .Select(_ => _.Value)
+                .FirstOrDefault();
 
-            //string value = null;
-            //parameters?.TryGetValue(name, out value);
-
-            return string.Empty;
+            return value;
         }
 
         public override StateData GetStateData(string jobId)
@@ -258,22 +250,22 @@ namespace Hangfire.Storage.SQLite
             if (jobId == null)
                 throw new ArgumentNullException(nameof(jobId));
 
-            //var iJobId = int.Parse(jobId);
-            //var latest = Database
-            //    .Job
-            //    .Find(j => j.Id == iJobId)
-            //    .Select(x => x.StateHistory)
-            //    .FirstOrDefault();
+            var iJobId = int.Parse(jobId);
+            var latest = DbContext
+                .StateRepository
+                .Where(_ => _.JobId == iJobId)
+                .OrderBy(_ => _.CreatedAt)
+                .ToList();
 
-            //var state = latest?.LastOrDefault();
+            var state = latest?.LastOrDefault();
 
-            //if (state == null)
-            //    return null;
+            if (state == null)
+                return null;
 
             return new StateData
             {
-                Name = string.Empty,
-                Reason = string.Empty,
+                Name = state.Name,
+                Reason = state.Reason,
                 Data = new Dictionary<string, string>()
             };
         }
@@ -285,12 +277,12 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentNullException(nameof(serverId));
             }
 
-            //var server = Database.Server.FindById(serverId);
-            //if (server == null)
-            //    return;
+            var server = DbContext.HangfireServerRepository.FirstOrDefault(_ => _.Id == serverId);
+            if (server == null)
+                return;
 
-            //server.LastHeartbeat = DateTime.UtcNow;
-            //Database.Server.Update(server);
+            server.LastHeartbeat = DateTime.UtcNow;
+            DbContext.Database.Update(server);
         }
 
         public override void RemoveServer(string serverId)
@@ -300,7 +292,7 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentNullException(nameof(serverId));
             }
 
-            //Database.Server.Delete(_ => _.Id == serverId);
+            DbContext.HangfireServerRepository.Delete(_ => _.Id == serverId);
         }
 
         public override int RemoveTimedOutServers(TimeSpan timeout)
@@ -311,16 +303,16 @@ namespace Hangfire.Storage.SQLite
             }
 
             var delCount = 0;
-            //var servers = Database.Server.FindAll();
+            var servers = DbContext.HangfireServerRepository.ToList();
 
-            //foreach (var server in servers)
-            //{
-            //    if (server.LastHeartbeat < DateTime.UtcNow.Add(timeOut.Negate()))
-            //    {
-            //        Database.Server.Delete(server.Id);
-            //        delCount++;
-            //    }
-            //}
+            foreach (var server in servers)
+            {
+                if (server.LastHeartbeat < DateTime.UtcNow.Add(timeout.Negate()))
+                {
+                    DbContext.HangfireServerRepository.Delete(_ => _.Id == server.Id);
+                    delCount++;
+                }
+            }
 
             return delCount;
         }
@@ -333,24 +325,31 @@ namespace Hangfire.Storage.SQLite
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            //var iJobId = int.Parse(id);
-            //var liteJob = Database.Job.FindById(iJobId);
-            //if (liteJob.Parameters == null)
-            //{
-            //    liteJob.Parameters = new Dictionary<string, string>();
-            //}
-            //if (liteJob.Parameters.ContainsKey(name))
-            //{
-            //    liteJob.Parameters.Remove(name);
-            //}
-            //liteJob.Parameters.Add(name, value);
+            var iJobId = int.Parse(id);
+            var jobParameter = DbContext.JobParameterRepository
+                .SingleOrDefault(_ => _.JobId == iJobId && _.Name == name);
 
-            //Database.Job.Update(liteJob);
+            if (jobParameter != null)
+            {
+                jobParameter.Value = value;
+                DbContext.Database.Update(jobParameter);
+            }
+            else 
+            {
+                var newParameter = new JobParameter()
+                {
+                    JobId = Convert.ToInt32(id),
+                    Name = name,
+                    Value = value
+                };
+
+                DbContext.Database.Insert(newParameter);
+            }
         }
 
         public override void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            using (var transaction = new SQLiteWriteOnlyTransaction(Database, _queueProviders))
+            using (var transaction = new SQLiteWriteOnlyTransaction(DbContext, _queueProviders))
             {
                 transaction.SetRangeInHash(key, keyValuePairs);
                 transaction.Commit();

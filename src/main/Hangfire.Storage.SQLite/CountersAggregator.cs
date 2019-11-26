@@ -59,7 +59,7 @@ namespace Hangfire.Storage.SQLite
             {
                 using (var storageConnection = (HangfireSQLiteConnection)_storage.GetConnection())
                 {
-                    var storageDb = storageConnection.Database;
+                    var storageDb = storageConnection.DbContext;
 
                     var recordsToAggregate = storageDb
                         .CounterRepository
