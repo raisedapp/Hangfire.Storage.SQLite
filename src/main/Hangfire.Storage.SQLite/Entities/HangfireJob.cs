@@ -18,7 +18,7 @@ namespace Hangfire.Storage.SQLite.Entities
         public string StateName { get; set; }
 
         [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
-        public string InvocationDate { get; set; }
+        public string InvocationData { get; set; }
 
         [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
         public string Arguments { get; set; }

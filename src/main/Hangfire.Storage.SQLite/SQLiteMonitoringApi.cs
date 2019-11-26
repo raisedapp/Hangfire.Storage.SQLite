@@ -6,12 +6,13 @@ using Hangfire.Common;
 using Hangfire.States;
 using Hangfire.Storage.Monitoring;
 using Hangfire.Storage.SQLite.Entities;
+using Newtonsoft.Json;
 
 namespace Hangfire.Storage.SQLite
 {
     public class SQLiteMonitoringApi : IMonitoringApi
     {
-        private readonly HangfireDbContext _database;
+        private readonly HangfireDbContext _dbContext;
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
@@ -22,21 +23,20 @@ namespace Hangfire.Storage.SQLite
         /// <param name="queueProviders"></param>
         public SQLiteMonitoringApi(HangfireDbContext database, PersistentJobQueueProviderCollection queueProviders)
         {
-            _database = database;
+            _dbContext = database;
             _queueProviders = queueProviders;
         }
         
         private T UseConnection<T>(Func<HangfireDbContext, T> action)
         {
-            var result = action(_database);
+            var result = action(_dbContext);
             return result;
         }
         
         private JobList<TDto> GetJobs<TDto>(HangfireDbContext connection, int from, int count, string stateName, Func<JobDetailedDto, Job, Dictionary<string, string>, TDto> selector)
         {
-            /*
-            var jobs = connection.Job
-                .Find(_ => _.StateName == stateName)
+            var jobs = connection.HangfireJobRepository
+                .Where(_ => _.StateName == stateName)
                 .OrderByDescending(x => x.Id)
                 .Skip(from)
                 .Take(count)
@@ -45,7 +45,7 @@ namespace Hangfire.Storage.SQLite
             List<JobDetailedDto> joinedJobs = jobs
                 .Select(job =>
                 {
-                    var state = job.StateHistory.FirstOrDefault(s => s.Name == stateName);
+                    var state = connection.StateRepository.FirstOrDefault(_ => _.Name == stateName);
 
                     return new JobDetailedDto
                     {
@@ -57,15 +57,12 @@ namespace Hangfire.Storage.SQLite
                         FetchedAt = null,
                         StateName = job.StateName,
                         StateReason = state?.Reason,
-                        StateData = state?.Data
+                        StateData = JsonConvert.DeserializeObject<Dictionary<string, string>>(state.Data)
                     };
                 })
                 .ToList();
 
             return DeserializeJobs(joinedJobs, selector);
-            */
-
-            return null;
         }
         
         private static JobList<TDto> DeserializeJobs<TDto>(ICollection<JobDetailedDto> jobs, Func<JobDetailedDto, Job, Dictionary<string, string>, TDto> selector)
@@ -112,13 +109,12 @@ namespace Hangfire.Storage.SQLite
         
         private JobList<EnqueuedJobDto> EnqueuedJobs(HangfireDbContext connection, IEnumerable<int> jobIds)
         {
-            /*
-            var jobs = connection.Job
-                .Find(x => jobIds.Contains(x.Id))
+            var jobs = connection.HangfireJobRepository
+                .Where(_ => jobIds.Contains(_.Id))
                 .ToList();
 
-            var enqueuedJobs = connection.JobQueue
-                .Find(x => x.FetchedAt == null && jobs.Select(_ => _.Id).Contains(x.JobId))
+            var enqueuedJobs = connection.JobQueueRepository
+                .Where(_ => _.FetchedAt == null && jobs.Select(x => x.Id).Contains(_.JobId))
                 .ToList();
 
             var jobsFiltered = enqueuedJobs
@@ -128,7 +124,8 @@ namespace Hangfire.Storage.SQLite
                 .Where(job => job != null)
                 .Select(job =>
                 {
-                    var state = job.StateHistory.LastOrDefault();
+                    var state = connection.StateRepository.LastOrDefault(_ => _.JobId == job.Id);
+
                     return new JobDetailedDto
                     {
                         Id = job.Id,
@@ -139,7 +136,7 @@ namespace Hangfire.Storage.SQLite
                         FetchedAt = null,
                         StateName = job.StateName,
                         StateReason = state?.Reason,
-                        StateData = state?.Data
+                        StateData = JsonConvert.DeserializeObject<Dictionary<string, string>>(state?.Data)
                     };
                 })
                 .ToList();
@@ -155,9 +152,6 @@ namespace Hangfire.Storage.SQLite
                         ? JobHelper.DeserializeNullableDateTime(stateData["EnqueuedAt"])
                         : null
                 });
-                */
-            
-            return null;
         }
         
         private Dictionary<DateTime, long> GetTimelineStats(HangfireDbContext connection, string type)
@@ -176,10 +170,10 @@ namespace Hangfire.Storage.SQLite
             var keys = stringDates.Select(x => $"stats:{type}:{x}").ToList();
             
             var valuesAggregatorMap = connection.AggregatedCounterRepository
-                .Where(x => keys.Contains(x.Key))
+                .Where(_ => keys.Contains(_.Key))
                 .AsEnumerable()
-                .GroupBy(x => x.Key)
-                .ToDictionary(x => x.Key, x => Convert.ToInt64(x.Sum(y => y.Value.ToInt64())));
+                .GroupBy(_ => _.Key)
+                .ToDictionary(_ => _.Key, _ => Convert.ToInt64(_.Sum(y => y.Value.ToInt64())));
 
             foreach (var key in keys)
             {
@@ -209,12 +203,12 @@ namespace Hangfire.Storage.SQLite
             var keys = dates.Select(x => $"stats:{type}:{x:yyyy-MM-dd-HH}").ToList();
             
             var valuesAggregatorMap = connection.AggregatedCounterRepository
-                .Where(x => keys.Contains(x.Key))
+                .Where(_ => keys.Contains(_.Key))
                 .AsEnumerable()
-                .GroupBy(x => x.Key, x => x)
-                .ToDictionary(x => x.Key, x => x.Sum(y => y.Value.ToInt64()));
+                .GroupBy(_ => _.Key, _ => _)
+                .ToDictionary(_ => _.Key, _ => _.Sum(y => y.Value.ToInt64()));
 
-            foreach (var key in keys.Where(key => !valuesAggregatorMap.ContainsKey(key)))
+            foreach (var key in keys.Where(_ => !valuesAggregatorMap.ContainsKey(_)))
             {
                 valuesAggregatorMap.Add(key, 0);
             }
@@ -231,16 +225,15 @@ namespace Hangfire.Storage.SQLite
         
         private JobList<FetchedJobDto> FetchedJobs(HangfireDbContext connection, IEnumerable<int> jobIds)
         {
-            /*
-            var jobs = connection.HangfireJobRepository
-                .Where(x => jobIds.Contains(x.Id))
+            /*var jobs = connection.HangfireJobRepository
+                .Where(_ => jobIds.Contains(_.Id))
                 .ToList();
 
             var jobIdToJobQueueMap = connection.JobQueueRepository
-                .Where(x => x.FetchedAt != null && jobs.Select(_ => _.Id).Contains(x.JobId))
-                .AsEnumerable().ToDictionary(kv => kv.JobId, kv => kv);
+                .Where(_ => _.FetchedAt != null && jobs.Select(x => x.Id).Contains(_.JobId))
+                .AsEnumerable().ToDictionary(_ => _.JobId, _ => _);
 
-            IEnumerable<JobDto> jobsFiltered = jobs.Where(job => jobIdToJobQueueMap.ContainsKey(job.Id));
+            IEnumerable<JobDto> jobsFiltered = jobs.Where(_ => jobIdToJobQueueMap.ContainsKey(_.Id));
 
             List<JobDetailedDto> joinedJobs = jobsFiltered
                 .Select(job =>
@@ -256,7 +249,7 @@ namespace Hangfire.Storage.SQLite
                         FetchedAt = null,
                         StateName = job.StateName,
                         StateReason = state?.Reason,
-                        StateData = state?.Data
+                        StateData = JsonConvert.DeserializeObject<Dictionary<string, string>>(state?.Data)
                     };
                 })
                 .ToList();
@@ -460,14 +453,12 @@ namespace Hangfire.Storage.SQLite
         /// <returns></returns>        
         public JobDetailsDto JobDetails(string jobId)
         {
-            
-            /*
-            return UseConnection(ctx =>
+            return UseConnection(_ =>
             {
                 var iJobId = int.Parse(jobId);
                 
-                var job = ctx.HangfireJobRepository.FirstOrDefault(_ => _.Id == iJobId);
-                var jobHistory = ctx.StateRepository.Where(_ => _.JobId == iJobId);
+                var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
+                var jobHistory = _.StateRepository.Where(x => x.JobId == iJobId);
 
                 if (job == null)
                     return null;
@@ -477,7 +468,7 @@ namespace Hangfire.Storage.SQLite
                     StateName = x.Name,
                     CreatedAt = x.CreatedAt,
                     Reason = x.Reason,
-                    //Data = x.Data
+                    Data = JsonConvert.DeserializeObject<Dictionary<string, string>>(x.Data)
                 }).AsEnumerable().OrderByDescending(x => x.CreatedAt).ToList();
                 
                 
@@ -486,12 +477,9 @@ namespace Hangfire.Storage.SQLite
                     CreatedAt = DateTime.UtcNow,
                     Job = DeserializeJob(job.InvocationData, job.Arguments),
                     History = history,
-                    Properties = job.Parameters
+                    Properties = JsonConvert.DeserializeObject<Dictionary<string, string>>(job.Arguments)
                 };
-                
-            });*/
-
-            return null;
+            });
         }
         
         /// <summary>
