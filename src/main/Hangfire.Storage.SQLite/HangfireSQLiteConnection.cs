@@ -6,6 +6,7 @@ using System.Threading;
 using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.Storage.SQLite.Entities;
+using Newtonsoft.Json;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -208,39 +209,41 @@ namespace Hangfire.Storage.SQLite
             if (jobId == null)
                 throw new ArgumentNullException(nameof(jobId));
 
-            /*
             var iJobId = int.Parse(jobId);
             var jobData = DbContext
-                .Find(_ => _.Id == iJobId)
-                .FirstOrDefault();
+                .HangfireJobRepository
+                .FirstOrDefault(_ => _.Id == iJobId);
 
             if (jobData == null)
                 return null;
 
-            //// TODO: conversion exception could be thrown.
+            // TODO: conversion exception could be thrown.
             var invocationData = SerializationHelper.Deserialize<InvocationData>(jobData.InvocationData,
                 SerializationOption.User);
-            invocationData.Arguments = jobData.Arguments;
+
+            if (!string.IsNullOrEmpty(jobData.Arguments))
+            {
+                invocationData.Arguments = jobData.Arguments;
+            }
 
             Job job = null;
             JobLoadException loadException = null;
 
             try
             {
-                job = invocationData.Deserialize();
+                job = invocationData.DeserializeJob();
             }
             catch (JobLoadException ex)
             {
                 loadException = ex;
             }
-            */
 
             return new JobData
             {
-                Job = null,
-                State = string.Empty,
-                CreatedAt = DateTime.UtcNow,
-                LoadException = null
+                Job = job,
+                State = jobData.StateName,
+                CreatedAt = jobData.CreatedAt,
+                LoadException = loadException
             };
         }
 
@@ -283,7 +286,7 @@ namespace Hangfire.Storage.SQLite
             {
                 Name = state.Name,
                 Reason = state.Reason,
-                Data = new Dictionary<string, string>()
+                Data = JsonConvert.DeserializeObject<Dictionary<string, string>>(state.Data)
             };
         }
 
