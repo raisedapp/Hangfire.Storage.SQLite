@@ -179,6 +179,22 @@ namespace Hangfire.Storage.SQLite
             return new HashSet<string>();
         }
 
+        public override List<string> GetRangeFromSet(string key, int startingFrom, int endingAt)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return DbContext
+                .SetRepository
+                .Where(_ => _.Key == key)
+                .Skip(startingFrom)
+                .Take(endingAt - startingFrom + 1) // inclusive -- ensure the last element is included
+                .Select(dto => (string)dto.Value)
+                .ToList();
+        }
+
         public override long GetSetCount(string key)
         {
             if (key == null)
