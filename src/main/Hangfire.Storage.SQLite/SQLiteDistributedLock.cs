@@ -1,4 +1,5 @@
 ﻿using Hangfire.Logging;
+using Hangfire.Storage.SQLite.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -25,7 +26,7 @@ namespace Hangfire.Storage.SQLite
 
         private readonly string _resource;
 
-        private readonly HangfireDbContext _database;
+        private readonly HangfireDbContext _dbContext;
 
         private readonly SQLiteStorageOptions _storageOptions;
 
@@ -47,7 +48,7 @@ namespace Hangfire.Storage.SQLite
             SQLiteStorageOptions storageOptions)
         {
             _resource = resource ?? throw new ArgumentNullException(nameof(resource));
-            _database = database ?? throw new ArgumentNullException(nameof(database));
+            _dbContext = database ?? throw new ArgumentNullException(nameof(database));
             _storageOptions = storageOptions ?? throw new ArgumentNullException(nameof(storageOptions));
 
             if (string.IsNullOrEmpty(resource))
@@ -122,13 +123,19 @@ namespace Hangfire.Storage.SQLite
 
                 while (!isLockAcquired && (lockTimeoutTime >= now))
                 {
-                    object result = null;
-                    //var result = _database.DistributedLock.FindOne(x => x.Resource == _resource);
-                    //var distributedLock = result ?? new DistributedLock();
-                    //distributedLock.Resource = _resource;
-                    //distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
+                    var result = _dbContext.DistributedLockRepository.FirstOrDefault(_ => _.Resource == _resource);
+                    var distributedLock = result ?? new DistributedLock();
 
-                    //_database.DistributedLock.Upsert(distributedLock);
+                    if (string.IsNullOrWhiteSpace(distributedLock.Id))
+                        distributedLock.Id = Guid.NewGuid().ToString();
+
+                    distributedLock.Resource = _resource;
+                    distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
+
+                    var rowsAffected = _dbContext.Database.Update(distributedLock);
+                    if (rowsAffected == 0)
+                        _dbContext.Database.Insert(distributedLock);
+
                     // If result is null, then it means we acquired the lock
                     if (result == null)
                     {
@@ -169,13 +176,13 @@ namespace Hangfire.Storage.SQLite
                     throw new DistributedLockTimeoutException($"Could not place a lock on the resource \'{_resource}\': The lock request timed out.");
                 }
             }
-            catch (DistributedLockTimeoutException)
+            catch (DistributedLockTimeoutException ex)
             {
-                throw;
+                throw ex;
             }
             catch (Exception ex)
             {
-                //throw new LiteDbDistributedLockException($"Could not place a lock on the resource \'{_resource}\': Check inner exception for details.", ex);
+                throw ex;
             }
         }
 
@@ -187,27 +194,27 @@ namespace Hangfire.Storage.SQLite
         {
             try
             {
-                //// Remove resource lock
-                //_database.DistributedLock.Delete(_ => _.Resource == _resource);
-                //if (_isEventWaitHandleSupported)
-                //{
-                //    try
-                //    {
-                //        if (EventWaitHandle.TryOpenExisting(EventWaitHandleName, out EventWaitHandle eventWaitHandler))
-                //        {
-                //            eventWaitHandler.Set();
-                //        }
-                //    }
-                //    catch (PlatformNotSupportedException)
-                //    {
-                //        // See _isEventWaitHandleSupported definition for more info.
-                //        _isEventWaitHandleSupported = false;
-                //    }
-                //}
+                // Remove resource lock
+                _dbContext.DistributedLockRepository.Delete(_ => _.Resource == _resource);
+                if (_isEventWaitHandleSupported)
+                {
+                    try
+                    {
+                        if (EventWaitHandle.TryOpenExisting(EventWaitHandleName, out EventWaitHandle eventWaitHandler))
+                        {
+                            eventWaitHandler.Set();
+                        }
+                    }
+                    catch (PlatformNotSupportedException)
+                    {
+                        // See _isEventWaitHandleSupported definition for more info.
+                        _isEventWaitHandleSupported = false;
+                    }
+                }
             }
             catch (Exception ex)
             {
-                //throw new LiteDbDistributedLockException($"Could not release a lock on the resource \'{_resource}\': Check inner exception for details.", ex);
+                throw ex;
             }
         }
 
@@ -216,7 +223,8 @@ namespace Hangfire.Storage.SQLite
             try
             {
                 // Delete expired locks
-                //_database.DistributedLock.Delete(x => x.Resource == _resource && x.ExpireAt.ToUniversalTime() < DateTime.UtcNow);
+                _dbContext.DistributedLockRepository.
+                    Delete(x => x.Resource == _resource && x.ExpireAt.ToUniversalTime() < DateTime.UtcNow);
             }
             catch (Exception ex)
             {
@@ -233,19 +241,19 @@ namespace Hangfire.Storage.SQLite
 
             _heartbeatTimer = new Timer(state =>
             {
-                //// Timer callback may be invoked after the Dispose method call,
-                //// so we are using lock to avoid unsynchronized calls.
-                //try
-                //{
-                //    var distributedLock = _database.DistributedLock.FindOne(x => x.Resource == _resource);
-                //    distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
+                // Timer callback may be invoked after the Dispose method call,
+                // so we are using lock to avoid unsynchronized calls.
+                try
+                {
+                    var distributedLock = _dbContext.DistributedLockRepository.FirstOrDefault(x => x.Resource == _resource);
+                    distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
 
-                //    _database.DistributedLock.Update(distributedLock);
-                //}
-                //catch (Exception ex)
-                //{
-                //    Logger.ErrorFormat("Unable to update heartbeat on the resource '{0}'. {1}", _resource, ex);
-                //}
+                    _dbContext.Database.Update(distributedLock);
+                }
+                catch (Exception ex)
+                {
+                    Logger.ErrorFormat("Unable to update heartbeat on the resource '{0}'. {1}", _resource, ex);
+                }
             }, null, timerInterval, timerInterval);
         }
     }

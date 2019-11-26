@@ -93,6 +93,7 @@ namespace Hangfire.Storage.SQLite
             Database.CreateTable<HangfireServer>();
             Database.CreateTable<Set>();
             Database.CreateTable<State>();
+            Database.CreateTable<DistributedLock>();
 
             AggregatedCounterRepository = Database.Table<AggregatedCounter>();
             CounterRepository = Database.Table<Counter>();
@@ -104,6 +105,7 @@ namespace Hangfire.Storage.SQLite
             HangfireServerRepository = Database.Table<HangfireServer>();
             SetRepository = Database.Table<Set>();
             StateRepository = Database.Table<State>();
+            DistributedLockRepository = Database.Table<DistributedLock>();
         }
 
         public TableQuery<AggregatedCounter> AggregatedCounterRepository { get; private set; }
@@ -125,5 +127,7 @@ namespace Hangfire.Storage.SQLite
         public TableQuery<Set> SetRepository { get; private set; }
 
         public TableQuery<State> StateRepository { get; private set; }
+
+        public TableQuery<DistributedLock> DistributedLockRepository { get; private set; }
     }
 }
