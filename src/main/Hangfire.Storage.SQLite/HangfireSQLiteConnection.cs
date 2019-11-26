@@ -179,6 +179,18 @@ namespace Hangfire.Storage.SQLite
             return new HashSet<string>();
         }
 
+        public override long GetSetCount(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return DbContext
+                .SetRepository
+                .Count(_ => _.Key == key);
+        }
+
         public override string GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore)
         {
             if (key == null)
@@ -201,7 +213,7 @@ namespace Hangfire.Storage.SQLite
                        _.Score <= toScoreDec)
                 .OrderBy(_ => _.Score)
                 .Select(_ => _.Value)
-                .FirstOrDefault() as string;
+                .FirstOrDefault();
         }
 
         public override JobData GetJobData(string jobId)
