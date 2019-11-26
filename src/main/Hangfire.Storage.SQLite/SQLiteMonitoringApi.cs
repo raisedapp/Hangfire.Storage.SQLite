@@ -188,7 +188,7 @@ namespace Hangfire.Storage.SQLite
             }
             
             return result;
-        } 
+        }
         
         private Dictionary<DateTime, long> GetHourlyTimelineStats(HangfireDbContext connection, string type)
         {
@@ -225,7 +225,8 @@ namespace Hangfire.Storage.SQLite
         
         private JobList<FetchedJobDto> FetchedJobs(HangfireDbContext connection, IEnumerable<int> jobIds)
         {
-            /*var jobs = connection.HangfireJobRepository
+            /*
+            var jobs = connection.HangfireJobRepository
                 .Where(_ => jobIds.Contains(_.Id))
                 .ToList();
 

@@ -88,7 +88,7 @@ namespace Hangfire.Storage.SQLite
                     Score = scoreDec,
                     Key = key,
                     Value = value,
-                    ExpireAt = null
+                    ExpireAt = DateTime.MinValue
                 };
 
                 var oldSet = _.SetRepository.FirstOrDefault(x => x.Key == key && x.Value == value);
@@ -229,7 +229,7 @@ namespace Hangfire.Storage.SQLite
 
                 if (job != null) 
                 {
-                    job.ExpireAt = null;
+                    job.ExpireAt = DateTime.MinValue;
                     _.Database.Update(job);
                 }
             });
@@ -332,7 +332,7 @@ namespace Hangfire.Storage.SQLite
                         Key = key,
                         Field = field,
                         Value = value,
-                        ExpireAt = null
+                        ExpireAt = DateTime.MinValue
                     };
 
                     var oldHash = _.HashRepository.FirstOrDefault(x => x.Key == key && x.Field == field);

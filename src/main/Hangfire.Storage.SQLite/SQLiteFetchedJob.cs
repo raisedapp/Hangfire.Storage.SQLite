@@ -64,7 +64,7 @@ namespace Hangfire.Storage.SQLite
 
             if (jobQueue != null)
             {
-                jobQueue.FetchedAt = null;
+                jobQueue.FetchedAt = DateTime.MinValue;
                 _dbContext.Database.Update(jobQueue);
 
                 _requeued = true;

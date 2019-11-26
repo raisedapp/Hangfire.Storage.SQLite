@@ -58,12 +58,12 @@ namespace Hangfire.Storage.SQLite
             HangfireDbContext connection = _storage.CreateAndOpenConnection();
             DateTime now = DateTime.UtcNow;
 
-            connection.HangfireJobRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value < now);
-            connection.AggregatedCounterRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value < now);
-            connection.CounterRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value < now);
-            connection.HashRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value < now);
-            connection.SetRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value < now);
-            connection.HangfireListRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value < now);
+            connection.HangfireJobRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
+            connection.AggregatedCounterRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
+            connection.CounterRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
+            connection.HashRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
+            connection.SetRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
+            connection.HangfireListRepository.Delete(_ => _.ExpireAt > DateTime.MinValue  && _.ExpireAt < now);
 
             cancellationToken.WaitHandle.WaitOne(_checkInterval);
         }

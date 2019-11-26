@@ -98,8 +98,9 @@ namespace Hangfire.Storage.SQLite
                             {
                                 counter.Value = counter.Value + item.Value;
                                 counter.ExpireAt = item.ExpireAt > aggregatedItem.ExpireAt
-                                    ? (item.ExpireAt.HasValue ? (DateTime?)item.ExpireAt.Value : null)
-                                    : (aggregatedItem.ExpireAt.HasValue ? (DateTime?)aggregatedItem.ExpireAt.Value : null);
+                                    ? (item.ExpireAt > DateTime.MinValue ? item.ExpireAt : DateTime.MinValue)
+                                    : (aggregatedItem.ExpireAt > DateTime.MinValue ? 
+                                        aggregatedItem.ExpireAt : DateTime.MinValue);
                                 storageDb.Database.Update(counter);
                             }
                         }
