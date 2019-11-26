@@ -79,11 +79,13 @@ namespace Hangfire.Storage.SQLite
         /// <param name="score"></param>        
         public override void AddToSet(string key, string value, double score)
         {
+            var scoreDec = score.ToInt64();
+
             QueueCommand(_ =>
             {
                 var set = new Set
                 {
-                    Score = score.ToInt64(),
+                    Score = scoreDec,
                     Key = key,
                     Value = value,
                     ExpireAt = null
@@ -98,7 +100,7 @@ namespace Hangfire.Storage.SQLite
                 else
                 {
                     set.Value = value;
-                    set.Score = score.ToInt64();
+                    set.Score = scoreDec;
                     _.Database.Update(set);
                 }
             });

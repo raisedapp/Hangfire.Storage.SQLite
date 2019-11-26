@@ -70,7 +70,7 @@ namespace Hangfire.Storage.SQLite
                         .GroupBy(_ => _.Key).Select(_ => new
                         {
                             _.Key,
-                            Value = _.Sum(x => x.Value.ToInt64()),
+                            Value = _.Sum(x => x.Value),
                             ExpireAt = _.Max(x => x.ExpireAt)
                         });
 
@@ -96,7 +96,7 @@ namespace Hangfire.Storage.SQLite
 
                             foreach (var counter in aggregatedCounters)
                             {
-                                counter.Value = counter.Value.ToInt64() + item.Value;
+                                counter.Value = counter.Value + item.Value;
                                 counter.ExpireAt = item.ExpireAt > aggregatedItem.ExpireAt
                                     ? (item.ExpireAt.HasValue ? (DateTime?)item.ExpireAt.Value : null)
                                     : (aggregatedItem.ExpireAt.HasValue ? (DateTime?)aggregatedItem.ExpireAt.Value : null);

@@ -176,11 +176,14 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentException("The 'toScore' value must be higher or equal to the 'fromScore' value.");
             }
 
+            var fromScoreDec = fromScore.ToInt64();
+            var toScoreDec = toScore.ToInt64();
+
             return DbContext
                 .SetRepository
                 .Where(_ => _.Key == key &&
-                      _.Score >= fromScore.ToInt64() &&
-                       _.Score <= toScore.ToInt64())
+                      _.Score >= fromScoreDec &&
+                       _.Score <= toScoreDec)
                 .OrderBy(_ => _.Score)
                 .Select(_ => _.Value)
                 .FirstOrDefault() as string;

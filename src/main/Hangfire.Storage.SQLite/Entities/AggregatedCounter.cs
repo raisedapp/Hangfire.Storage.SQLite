@@ -11,7 +11,7 @@ namespace Hangfire.Storage.SQLite.Entities
         [MaxLength(DefaultValues.MaxLengthKeyColumn)]
         public string Key { get; set; }
 
-        public long Value { get; set; }
+        public decimal Value { get; set; }
 
         [Indexed(Name = "IX_AggregatedCounter_ExpireAt", Order = 1, Unique = false)]
         public DateTime? ExpireAt { get; set; }

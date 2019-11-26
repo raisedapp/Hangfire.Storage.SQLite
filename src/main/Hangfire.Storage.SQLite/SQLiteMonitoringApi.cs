@@ -173,7 +173,7 @@ namespace Hangfire.Storage.SQLite
                 .Where(_ => keys.Contains(_.Key))
                 .AsEnumerable()
                 .GroupBy(_ => _.Key)
-                .ToDictionary(_ => _.Key, _ => Convert.ToInt64(_.Sum(y => y.Value.ToInt64())));
+                .ToDictionary(_ => _.Key, _ => _.Sum(y => y.Value));
 
             foreach (var key in keys)
             {
@@ -184,7 +184,7 @@ namespace Hangfire.Storage.SQLite
             for (var i = 0; i < stringDates.Count; i++)
             {
                 var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
-                result.Add(dates[i], value);
+                result.Add(dates[i], value.ToInt64());
             }
             
             return result;
@@ -206,7 +206,7 @@ namespace Hangfire.Storage.SQLite
                 .Where(_ => keys.Contains(_.Key))
                 .AsEnumerable()
                 .GroupBy(_ => _.Key, _ => _)
-                .ToDictionary(_ => _.Key, _ => _.Sum(y => y.Value.ToInt64()));
+                .ToDictionary(_ => _.Key, _ => _.Sum(y => y.Value));
 
             foreach (var key in keys.Where(_ => !valuesAggregatorMap.ContainsKey(_)))
             {
@@ -217,7 +217,7 @@ namespace Hangfire.Storage.SQLite
             for (var i = 0; i < dates.Count; i++)
             {
                 var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
-                result.Add(dates[i], value);
+                result.Add(dates[i], value.ToInt64());
             }
             
             return result;

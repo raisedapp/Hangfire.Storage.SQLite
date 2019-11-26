@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SQLite;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,6 +13,7 @@ namespace Hangfire.Storage.SQLite.Entities
         /// <summary>
         /// The unique id of the document.
         /// </summary>
+        [PrimaryKey]
         public string Id { get; set; }
 
         /// <summary>
