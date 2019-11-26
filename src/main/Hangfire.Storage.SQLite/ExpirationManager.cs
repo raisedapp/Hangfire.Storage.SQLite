@@ -58,16 +58,14 @@ namespace Hangfire.Storage.SQLite
             HangfireDbContext connection = _storage.CreateAndOpenConnection();
             DateTime now = DateTime.UtcNow;
 
-            /*
-            RemoveExpiredRecord(connection.Job, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
-            RemoveExpiredRecord(connection.StateDataAggregatedCounter, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
-            RemoveExpiredRecord(connection.StateDataCounter, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
-            RemoveExpiredRecord(connection.StateDataHash, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
-            RemoveExpiredRecord(connection.StateDataSet, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
-            RemoveExpiredRecord(connection.StateDataList, _ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            connection.HangfireJobRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            connection.AggregatedCounterRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            connection.CounterRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            connection.HashRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            connection.SetRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
+            connection.HangfireListRepository.Delete(_ => _.ExpireAt != null && _.ExpireAt.Value.ToUniversalTime() < now);
 
             cancellationToken.WaitHandle.WaitOne(_checkInterval);
-            */
         }
     }
 }

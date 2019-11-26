@@ -21,5 +21,8 @@ namespace Hangfire.Storage.SQLite.Entities
         [MaxLength(DefaultValues.MaxLengthSetValueColumn)]
         [Indexed(Name = "IX_Set_Value", Order = 2, Unique = false)]
         public string Value { get; set; }
+
+        [Indexed(Name = "IX_Set_ExpireAt", Order = 3, Unique = false)]
+        public DateTime? ExpireAt { get; set; }
     }
 }

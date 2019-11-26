@@ -27,6 +27,6 @@ namespace Hangfire.Storage.SQLite.Entities
         public string Value { get; set; }
 
         [Indexed(Name = "IX_Hash_ExpireAt", Order = 3, Unique = false)]
-        public DateTime ExpireAt { get; set; }
+        public DateTime? ExpireAt { get; set; }
     }
 }
