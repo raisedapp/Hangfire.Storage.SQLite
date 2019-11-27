@@ -176,7 +176,7 @@ namespace Hangfire.Storage.SQLite
                 .Select(_ => _.Value)
                 .ToList();
 
-            return new HashSet<string>();
+            return new HashSet<string>(result.Cast<string>());
         }
 
         public override List<string> GetRangeFromSet(string key, int startingFrom, int endingAt)

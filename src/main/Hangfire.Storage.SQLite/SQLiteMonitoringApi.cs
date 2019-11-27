@@ -459,7 +459,8 @@ namespace Hangfire.Storage.SQLite
                 var iJobId = int.Parse(jobId);
                 
                 var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
-                var jobHistory = _.StateRepository.Where(x => x.JobId == iJobId);
+                var jobHistory = _.StateRepository.Where(x => x.JobId == iJobId).ToList();
+                var jobParameters = _.JobParameterRepository.Where(x => x.JobId == iJobId).ToList().ToDictionary(x => x.Name, x => x.Value);
 
                 if (job == null)
                     return null;
@@ -478,7 +479,7 @@ namespace Hangfire.Storage.SQLite
                     CreatedAt = DateTime.UtcNow,
                     Job = DeserializeJob(job.InvocationData, job.Arguments),
                     History = history,
-                    Properties = JsonConvert.DeserializeObject<Dictionary<string, string>>(job.Arguments)
+                    Properties = jobParameters
                 };
             });
         }

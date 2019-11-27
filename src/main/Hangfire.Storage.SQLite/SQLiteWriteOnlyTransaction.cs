@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Hangfire.States;
 using Hangfire.Storage.SQLite.Entities;
+using Newtonsoft.Json;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -43,7 +44,7 @@ namespace Hangfire.Storage.SQLite
                     Name = state.Name,
                     Reason = state.Reason,
                     CreatedAt = DateTime.UtcNow,
-                    Data = state.ToString()
+                    Data = JsonConvert.SerializeObject(state.SerializeData())
                 };
 
                 _.Database.Insert(jobState);
@@ -303,7 +304,7 @@ namespace Hangfire.Storage.SQLite
                         Name = state.Name,
                         Reason = state.Reason,
                         CreatedAt = DateTime.UtcNow,
-                        Data = state.ToString()
+                        Data = JsonConvert.SerializeObject(state.SerializeData())
                     });
 
                     _.Database.Update(job);

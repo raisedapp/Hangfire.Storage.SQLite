@@ -35,10 +35,12 @@ namespace WebSample
             app.UseHangfireServer();
             app.UseHangfireDashboard(string.Empty);
 
-            app.Run(async (context) =>
-            {
-                await context.Response.WriteAsync("Hello World!");
-            });
+            RecurringJob.AddOrUpdate(() => TaskMethod(), Cron.Minutely);
+        }
+
+        public void TaskMethod()
+        {
+            Console.WriteLine("Testing Web Sample!!!");
         }
     }
 }
