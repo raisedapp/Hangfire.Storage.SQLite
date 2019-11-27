@@ -34,10 +34,10 @@ GlobalConfiguration.Configuration.UseSQLiteStorage();
 ### Example
 
 ```csharp
-            services.AddHangfire(configuration => configuration
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-                .UseSQLiteStorage());
+services.AddHangfire(configuration => configuration
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSQLiteStorage());
 ```
 
 ## Thanks
