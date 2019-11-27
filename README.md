@@ -5,7 +5,10 @@
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](http://opensource.org/licenses/MIT)
 
 ## Overview
-SQLite storage for Hangfire
+
+An Alternative SQLite Storage for Hangfire.
+
+This project was created by abandonment **Hangfire.SQLite** storage (https://github.com/wanlitao/HangfireExtension), as an alternative to use SQLite with Hangfire.
 
 ## Build Status
 `Platform` | `Master` | `Develop`
@@ -15,17 +18,31 @@ SQLite storage for Hangfire
 
 ## Installation
 
+Install a package from Nuget.
+
+```
+Install-Package Hangfire.Storage.SQLite
+```
+
 ## Usage
 
-### DotNetCore
-
-### NetFramework
+This is how you connect to an SQLite instance
+```csharp
+GlobalConfiguration.Configuration.UseSQLiteStorage();
+```
 
 ### Example
 
-#### Options
+```csharp
+            services.AddHangfire(configuration => configuration
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSQLiteStorage());
+```
 
 ## Thanks
+
+This project is mainly based on **Hangfire.LiteDB** storage by [@codeyu](https://github.com/codeyu) (https://github.com/codeyu/Hangfire.LiteDB)
 
 ## Donation
 If this project help you reduce time to develop, you can give me a cup of coffee :) 
