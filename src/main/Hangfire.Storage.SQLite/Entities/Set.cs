@@ -5,10 +5,12 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    internal class Set
+    public class Set
     {
+        private string _setPK = string.Empty;
+        
         [PrimaryKey]
-        public string SetPK { get { return Key + "_" + Value; } }
+        public string SetPK { get { return Key + "_" + Value; } set { _setPK = value; } }
 
         [MaxLength(DefaultValues.MaxLengthKeyColumn)]
         [Indexed(Name = "IX_Set_Key", Order = 1, Unique = false)]
@@ -19,5 +21,8 @@ namespace Hangfire.Storage.SQLite.Entities
         [MaxLength(DefaultValues.MaxLengthSetValueColumn)]
         [Indexed(Name = "IX_Set_Value", Order = 2, Unique = false)]
         public string Value { get; set; }
+
+        [Indexed(Name = "IX_Set_ExpireAt", Order = 3, Unique = false)]
+        public DateTime ExpireAt { get; set; }
     }
 }

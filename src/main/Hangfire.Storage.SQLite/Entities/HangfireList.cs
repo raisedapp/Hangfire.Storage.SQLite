@@ -6,12 +6,17 @@ using System.Text;
 namespace Hangfire.Storage.SQLite.Entities
 {
     [Table("List")]
-    internal class HangfireList
+    public class HangfireList
     {
+        private string _listPK = string.Empty;
+        
         [PrimaryKey]
-        public string ListPK { get { return Id + "_" + Key; } }
+        public string ListPK { 
+            get => Id + "_" + Key;
+            set => _listPK = value;
+        }
 
-        [AutoIncrement]
+        //[AutoIncrement]
         [Indexed(Name = "IX_List_Id", Order = 1, Unique = false)]
         public int Id { get; set; }
 
@@ -23,6 +28,6 @@ namespace Hangfire.Storage.SQLite.Entities
         public string Value { get; set; }
 
         [Indexed(Name = "IX_List_ExpireAt", Order = 3, Unique = false)]
-        public DateTime? ExpireAt { get; set; }
+        public DateTime ExpireAt { get; set; }
     }
 }

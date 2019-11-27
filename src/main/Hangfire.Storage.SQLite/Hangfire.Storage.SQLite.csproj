@@ -17,7 +17,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>hangfire hangfire-storage sqlite</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>SQLite storage for Hangfire</Description>
+    <Description>An Alternative SQLite Storage for Hangfire</Description>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\..\LICENSE">
@@ -26,6 +26,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.7.6" />
     <PackageReference Include="sqlite-net-pcl" Version="1.6.292" />
   </ItemGroup>
 

@@ -5,12 +5,16 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    internal class JobQueue
+    public class JobQueue
     {
+        private string _jobQueuePK = string.Empty;
         [PrimaryKey]
-        public string JobQueuePK { get { return Id + "_" + Queue; } }
+        public string JobQueuePK { 
+            get => Id + "_" + Queue;
+            set => _jobQueuePK = value;
+        }
 
-        [AutoIncrement]
+        //[AutoIncrement]
         [Indexed(Name = "IX_JobQueue_Id", Order = 1, Unique = false)]
         public int Id { get; set; }
 
@@ -21,6 +25,6 @@ namespace Hangfire.Storage.SQLite.Entities
         public string Queue { get; set; }
 
         [Indexed(Name = "IX_JobQueue_FetchedAt", Order = 3, Unique = false)]
-        public DateTime? FetchedAt { get; set; }
+        public DateTime FetchedAt { get; set; }
     }
 }

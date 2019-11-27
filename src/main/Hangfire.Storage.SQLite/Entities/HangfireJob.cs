@@ -5,7 +5,8 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    internal class Job
+    [Table("Job")]
+    public class HangfireJob
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
@@ -17,7 +18,7 @@ namespace Hangfire.Storage.SQLite.Entities
         public string StateName { get; set; }
 
         [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
-        public string InvocationDate { get; set; }
+        public string InvocationData { get; set; }
 
         [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
         public string Arguments { get; set; }
@@ -25,6 +26,6 @@ namespace Hangfire.Storage.SQLite.Entities
         public DateTime CreatedAt { get; set; }
 
         [Indexed(Name = "IX_Job_ExpireAt", Order = 2, Unique = false)]
-        public DateTime? ExpireAt { get; set; }
+        public DateTime ExpireAt { get; set; }
     }
 }

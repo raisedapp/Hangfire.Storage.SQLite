@@ -2,19 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-
     <IsPackable>false</IsPackable>
-
     <Authors>felixclase</Authors>
-
     <Copyright>Copyright © 2019 - Present</Copyright>
-
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-
     <PackageProjectUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</PackageProjectUrl>
-
     <RepositoryUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</RepositoryUrl>
-
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 

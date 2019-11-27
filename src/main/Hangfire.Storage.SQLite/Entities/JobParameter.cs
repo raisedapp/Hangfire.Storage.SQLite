@@ -5,10 +5,15 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    internal class JobParameter
+    public class JobParameter
     {
+        private string _jobParameterPK = string.Empty;
+        
         [PrimaryKey]
-        public string JobParameterPK { get { return JobId + "_" + Name; } }
+        public string JobParameterPK { 
+            get => JobId + "_" + Name;
+            set => _jobParameterPK = value;
+        }
 
         [Indexed(Name = "IX_JobParameter_JobId", Order = 1, Unique = false)]
         public int JobId { get; set; }
