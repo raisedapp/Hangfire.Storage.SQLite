@@ -17,7 +17,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>hangfire hangfire-storage sqlite</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>SQLite storage for Hangfire</Description>
+    <Description>An Alternative SQLite Storage for Hangfire</Description>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\..\LICENSE">
