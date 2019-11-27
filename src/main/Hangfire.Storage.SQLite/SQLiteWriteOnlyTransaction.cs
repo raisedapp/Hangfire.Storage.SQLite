@@ -16,6 +16,8 @@ namespace Hangfire.Storage.SQLite
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
+        private static object _lockObject = new object();
+
         /// <summary>
         /// </summary>
         /// <param name="connection"></param>
@@ -109,9 +111,12 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            foreach (var action in _commandQueue)
+            lock (_lockObject)
             {
-                action.Invoke(_connection);
+                foreach (var action in _commandQueue)
+                {
+                    action.Invoke(_connection);
+                }
             }
         }
 
@@ -353,7 +358,29 @@ namespace Hangfire.Storage.SQLite
                 });
             }        
         }
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="expireIn"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void ExpireHash(string key, TimeSpan expireIn)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            QueueCommand(_ =>
+            {
+                var states = _.HashRepository.Where(x => x.Key == key).ToList();
+
+                foreach (var state in states)
+                {
+                    state.ExpireAt = DateTime.UtcNow.Add(expireIn);
+                    _.Database.Update(state);
+                }
+            });
+        }
+
         /// <summary>
         /// 
         /// </summary>
