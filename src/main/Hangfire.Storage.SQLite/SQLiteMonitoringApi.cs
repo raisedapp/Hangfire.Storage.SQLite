@@ -232,8 +232,10 @@ namespace Hangfire.Storage.SQLite
                 .Where(_ => jobIds.Contains(_.Id))
                 .ToList();
 
+            //SQLITE LAMBDA SUPPORT IS LIMITED!!
             var jobIdToJobQueueMap = connection.JobQueueRepository
-                .Where(_ => _.FetchedAt != null && jobs.Select(x => x.Id).Contains(_.JobId))
+                .Where(_ => _.FetchedAt != DateTime.MinValue).ToList()
+                .Where(_ => jobs.Select(x => x.Id).Contains(_.JobId))
                 .AsEnumerable().ToDictionary(_ => _.JobId, _ => _);
 
             var jobsFiltered = jobs.Where(_ => jobIdToJobQueueMap.ContainsKey(_.Id));

@@ -298,26 +298,16 @@ namespace Hangfire.Storage.SQLite
                 {
                     job.StateName = state.Name;
 
-                    try
+                    _.Database.Insert(new State
                     {
-                        _.Database.BeginTransaction();
-
-                        _.Database.Insert(new State
-                        {
-                            JobId = iJobId,
-                            Name = state.Name,
-                            Reason = state.Reason,
-                            CreatedAt = DateTime.UtcNow,
-                            Data = JsonConvert.SerializeObject(state.SerializeData())
-                        });
-
-                        _.Database.Update(job);
-                        _.Database.Commit();
-                    }
-                    catch (Exception ex)
-                    {
-                        _.Database.Rollback();
-                    }
+                        JobId = iJobId,
+                        Name = state.Name,
+                        Reason = state.Reason,
+                        CreatedAt = DateTime.UtcNow,
+                        Data = JsonConvert.SerializeObject(state.SerializeData())
+                    });
+                    
+                    _.Database.Update(job);
                 }
             });        
         }
