@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Hangfire.Storage.SQLite.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -30,7 +31,6 @@ namespace Hangfire.Storage.SQLite
         /// <returns></returns>
         public IFetchedJob Dequeue(string[] queues, CancellationToken cancellationToken)
         {
-            /*
             if (queues == null)
             {
                 throw new ArgumentNullException(nameof(queues));
@@ -41,51 +41,35 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentException("Queue array must be non-empty.", nameof(queues));
             }
 
-            var fetchConditions = new[]
-            {
-                Query.EQ("FetchedAt", null),
-                Query.LT("FetchedAt", DateTime.UtcNow.AddSeconds(_storageOptions.InvisibilityTimeout.Negate().TotalSeconds))
-            };
-            var fetchConditionsIndex = 0;
-
             JobQueue fetchedJob = null;
             while (fetchedJob == null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
-                var fetchCondition = fetchConditions[fetchConditionsIndex];
 
                 foreach (var queue in queues)
                 {
                     var lockQueue = string.Intern($"f13333e1-a0c8-48c8-bf8c-788e89030329_{queue}");
                     lock (lockQueue)
                     {
-                        fetchedJob = _connection.JobQueue.FindOne(Query.And(fetchCondition, Query.EQ("Queue", queue)));
+                        fetchedJob = _dbContext.JobQueueRepository.FirstOrDefault(_ => _.Queue == queue && 
+                            (_.FetchedAt == DateTime.MinValue));
 
                         if (fetchedJob != null)
                         {
                             fetchedJob.FetchedAt = DateTime.UtcNow;
-                            _connection.JobQueue.Update(fetchedJob);
+                            _dbContext.Database.Update(fetchedJob);
+
                             break;
                         }
                     }
                 }
 
-                if (fetchedJob == null && fetchConditionsIndex == fetchConditions.Length - 1)
-                {
-                    // ...and we are out of fetch conditions as well.
-                    // Wait for a while before polling again.
-                    cancellationToken.WaitHandle.WaitOne(_storageOptions.QueuePollInterval);
-                    cancellationToken.ThrowIfCancellationRequested();
-                }
-
-                // Move on to next fetch condition
-                fetchConditionsIndex = (fetchConditionsIndex + 1) % fetchConditions.Length;
+                // Wait for a while before polling again.
+                cancellationToken.WaitHandle.WaitOne(_storageOptions.QueuePollInterval);
+                cancellationToken.ThrowIfCancellationRequested();    
             }
 
-            return new LiteDbFetchedJob(_connection, fetchedJob.Id, fetchedJob.JobId, fetchedJob.Queue);
-            */
-            return null;
+            return new SQLiteFetchedJob(_dbContext, fetchedJob.Id, fetchedJob.JobId, fetchedJob.Queue);
         }
 
         /// <summary>
@@ -95,13 +79,11 @@ namespace Hangfire.Storage.SQLite
         /// <param name="jobId"></param>
         public void Enqueue(string queue, string jobId)
         {
-            /*
-            _connection.JobQueue.Insert(new JobQueue
+            _dbContext.Database.Insert(new JobQueue
             {
                 JobId = int.Parse(jobId),
                 Queue = queue
             });
-            */
         }
     }
 }
