@@ -7,19 +7,10 @@ namespace Hangfire.Storage.SQLite.Entities
 {
     public class State
     {
-        private string _statePK = string.Empty;
-        
-        [PrimaryKey]
-        public string StatePK { 
-            get => Id + "_" + JobId;
-            set => _statePK = value;
-        }
-
-        //[AutoIncrement]
-        [Indexed(Name = "IX_State_Id", Order = 1, Unique = false)]
+        [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
-        [Indexed(Name = "IX_State_JobId", Order = 2, Unique = false)]
+        [Indexed(Name = "IX_State_JobId", Order = 1, Unique = false)]
         public int JobId { get; set; }
 
         [MaxLength(DefaultValues.MaxLengthStateNameColumn)]

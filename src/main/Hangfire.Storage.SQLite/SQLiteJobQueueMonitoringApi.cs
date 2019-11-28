@@ -28,9 +28,9 @@ namespace Hangfire.Storage.SQLite
         /// <returns></returns>
         public EnqueuedAndFetchedCountDto GetEnqueuedAndFetchedCount(string queue)
         {
-            var enqueuedCount = _dbContext.JobQueueRepository.Count(_ => _.Queue == queue && _.FetchedAt == null);
+            var enqueuedCount = _dbContext.JobQueueRepository.Count(_ => _.Queue == queue && _.FetchedAt == DateTime.MinValue);
             
-            var fetchedCount = _dbContext.JobQueueRepository.Count(_ => _.Queue == queue && _.FetchedAt != null);
+            var fetchedCount = _dbContext.JobQueueRepository.Count(_ => _.Queue == queue && _.FetchedAt != DateTime.MinValue);
 
             return new EnqueuedAndFetchedCountDto
             {
@@ -49,7 +49,7 @@ namespace Hangfire.Storage.SQLite
         public IEnumerable<int> GetEnqueuedJobIds(string queue, int from, int perPage)
         {
             return _dbContext.JobQueueRepository
-                .Where(_ => _.Queue == queue && _.FetchedAt == null)
+                .Where(_ => _.Queue == queue && _.FetchedAt == DateTime.MinValue)
                 .Skip(from)
                 .Take(perPage)
                 .Select(_ => _.JobId)
@@ -70,7 +70,7 @@ namespace Hangfire.Storage.SQLite
         public IEnumerable<int> GetFetchedJobIds(string queue, int from, int perPage)
         {
             return _dbContext.JobQueueRepository
-                .Where(_ => _.Queue == queue && _.FetchedAt != null)
+                .Where(_ => _.Queue == queue && _.FetchedAt != DateTime.MinValue)
                 .Skip(from)
                 .Take(perPage)
                 .Select(_ => _.JobId)

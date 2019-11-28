@@ -113,8 +113,11 @@ namespace Hangfire.Storage.SQLite
                 .Where(_ => jobIds.Contains(_.Id))
                 .ToList();
 
+            //SQLITE PCL LIMITED LAMBDA SUPPORT!!
             var enqueuedJobs = connection.JobQueueRepository
-                .Where(_ => _.FetchedAt == null && jobs.Select(x => x.Id).Contains(_.JobId))
+                .Where(_ => _.FetchedAt == DateTime.MinValue)
+                .ToList()
+                .Where(_ => jobs.Select(x => x.Id).Contains(_.JobId))
                 .ToList();
 
             var jobsFiltered = enqueuedJobs
@@ -225,21 +228,23 @@ namespace Hangfire.Storage.SQLite
         
         private JobList<FetchedJobDto> FetchedJobs(HangfireDbContext connection, IEnumerable<int> jobIds)
         {
-            /*
             var jobs = connection.HangfireJobRepository
                 .Where(_ => jobIds.Contains(_.Id))
                 .ToList();
 
+            //SQLITE LAMBDA SUPPORT IS LIMITED!!
             var jobIdToJobQueueMap = connection.JobQueueRepository
-                .Where(_ => _.FetchedAt != null && jobs.Select(x => x.Id).Contains(_.JobId))
+                .Where(_ => _.FetchedAt != DateTime.MinValue).ToList()
+                .Where(_ => jobs.Select(x => x.Id).Contains(_.JobId))
                 .AsEnumerable().ToDictionary(_ => _.JobId, _ => _);
 
-            IEnumerable<JobDto> jobsFiltered = jobs.Where(_ => jobIdToJobQueueMap.ContainsKey(_.Id));
+            var jobsFiltered = jobs.Where(_ => jobIdToJobQueueMap.ContainsKey(_.Id));
 
             List<JobDetailedDto> joinedJobs = jobsFiltered
                 .Select(job =>
                 {
-                    var state = job.StateHistory.FirstOrDefault(s => s.Name == job.StateName);
+                    var state = connection.StateRepository.FirstOrDefault(s => s.Name == job.StateName);
+
                     return new JobDetailedDto
                     {
                         Id = job.Id,
@@ -270,9 +275,6 @@ namespace Hangfire.Storage.SQLite
             }
 
             return new JobList<FetchedJobDto>(result);
-            */
-
-            return null;
         }       
         
         public JobList<DeletedJobDto> DeletedJobs(int from, int count)

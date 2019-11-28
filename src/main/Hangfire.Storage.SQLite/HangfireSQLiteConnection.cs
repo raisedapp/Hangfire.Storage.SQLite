@@ -156,8 +156,8 @@ namespace Hangfire.Storage.SQLite
             var result = DbContext
                 .HashRepository
                 .Where(_ => _.Key == key)
-                .AsEnumerable()
                 .Select(_ => new { _.Field, _.Value })
+                .ToList()
                 .ToDictionary(x => x.Field, x => x.Value);
 
             return result.Count != 0 ? result : null;

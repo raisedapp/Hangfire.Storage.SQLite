@@ -7,7 +7,7 @@ namespace Hangfire.Storage.SQLite
     /// <summary>
     /// 
     /// </summary>
-    public class SQLiteFetchedJob
+    public class SQLiteFetchedJob : IFetchedJob
     {
         private readonly HangfireDbContext _dbContext;
         private readonly int _id;

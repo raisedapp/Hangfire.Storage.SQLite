@@ -12,9 +12,11 @@ namespace Hangfire.Storage.SQLite
     {
         private readonly Queue<Action<HangfireDbContext>> _commandQueue = new Queue<Action<HangfireDbContext>>();
 
-        private readonly HangfireDbContext _connection;
+        private readonly HangfireDbContext _dbContext;
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
+
+        private static object _lockObject = new object();
 
         /// <summary>
         /// </summary>
@@ -24,7 +26,7 @@ namespace Hangfire.Storage.SQLite
         public SQLiteWriteOnlyTransaction(HangfireDbContext connection,
             PersistentJobQueueProviderCollection queueProviders)
         {
-            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _dbContext = connection ?? throw new ArgumentNullException(nameof(connection));
             _queueProviders = queueProviders ?? throw new ArgumentNullException(nameof(queueProviders));
         }
         
@@ -59,7 +61,7 @@ namespace Hangfire.Storage.SQLite
         public override void AddToQueue(string queue, string jobId)
         {
             var provider = _queueProviders.GetProvider(queue);
-            var persistentQueue = provider.GetJobQueue(_connection);
+            var persistentQueue = provider.GetJobQueue(_dbContext);
 
             QueueCommand(_ =>
             {
@@ -109,9 +111,24 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            foreach (var action in _commandQueue)
+            lock (_lockObject)
             {
-                action.Invoke(_connection);
+                try
+                {
+                    _dbContext.Database.BeginTransaction();
+
+                    foreach (var action in _commandQueue)
+                    {
+                        action.Invoke(_dbContext);
+                    }
+
+                    _dbContext.Database.Commit();
+                }
+                catch (Exception ex)
+                {
+
+                    _dbContext.Database.Rollback();
+                }
             }
         }
 
@@ -216,7 +233,8 @@ namespace Hangfire.Storage.SQLite
                 _.Database.Insert(new HangfireList
                 {
                     Key = key,
-                    Value = value
+                    Value = value,
+                    ExpireAt = DateTime.MinValue
                 });
             });
         }
@@ -306,7 +324,7 @@ namespace Hangfire.Storage.SQLite
                         CreatedAt = DateTime.UtcNow,
                         Data = JsonConvert.SerializeObject(state.SerializeData())
                     });
-
+                    
                     _.Database.Update(job);
                 }
             });        
@@ -348,12 +366,35 @@ namespace Hangfire.Storage.SQLite
                     }
                     else
                     {
+                        hash.Id = oldHash.Id;
                         _.Database.Update(hash);
                     }
                 });
             }        
         }
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="expireIn"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void ExpireHash(string key, TimeSpan expireIn)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            QueueCommand(_ =>
+            {
+                var states = _.HashRepository.Where(x => x.Key == key).ToList();
+
+                foreach (var state in states)
+                {
+                    state.ExpireAt = DateTime.UtcNow.Add(expireIn);
+                    _.Database.Update(state);
+                }
+            });
+        }
+
         /// <summary>
         /// 
         /// </summary>
