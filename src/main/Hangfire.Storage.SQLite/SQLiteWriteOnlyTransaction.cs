@@ -353,6 +353,7 @@ namespace Hangfire.Storage.SQLite
                     }
                     else
                     {
+                        hash.Id = oldHash.Id;
                         _.Database.Update(hash);
                     }
                 });
