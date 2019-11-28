@@ -12,7 +12,7 @@ namespace Hangfire.Storage.SQLite
     {
         private readonly Queue<Action<HangfireDbContext>> _commandQueue = new Queue<Action<HangfireDbContext>>();
 
-        private readonly HangfireDbContext _connection;
+        private readonly HangfireDbContext _dbContext;
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
@@ -26,7 +26,7 @@ namespace Hangfire.Storage.SQLite
         public SQLiteWriteOnlyTransaction(HangfireDbContext connection,
             PersistentJobQueueProviderCollection queueProviders)
         {
-            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _dbContext = connection ?? throw new ArgumentNullException(nameof(connection));
             _queueProviders = queueProviders ?? throw new ArgumentNullException(nameof(queueProviders));
         }
         
@@ -61,7 +61,7 @@ namespace Hangfire.Storage.SQLite
         public override void AddToQueue(string queue, string jobId)
         {
             var provider = _queueProviders.GetProvider(queue);
-            var persistentQueue = provider.GetJobQueue(_connection);
+            var persistentQueue = provider.GetJobQueue(_dbContext);
 
             QueueCommand(_ =>
             {
@@ -113,9 +113,21 @@ namespace Hangfire.Storage.SQLite
         {
             lock (_lockObject)
             {
-                foreach (var action in _commandQueue)
+                try
                 {
-                    action.Invoke(_connection);
+                    _dbContext.Database.BeginTransaction();
+
+                    foreach (var action in _commandQueue)
+                    {
+                        action.Invoke(_dbContext);
+                    }
+
+                    _dbContext.Database.Commit();
+                }
+                catch (Exception ex)
+                {
+
+                    _dbContext.Database.Rollback();
                 }
             }
         }
@@ -221,7 +233,8 @@ namespace Hangfire.Storage.SQLite
                 _.Database.Insert(new HangfireList
                 {
                     Key = key,
-                    Value = value
+                    Value = value,
+                    ExpireAt = DateTime.MinValue
                 });
             });
         }
