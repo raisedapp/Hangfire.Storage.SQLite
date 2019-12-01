@@ -4,12 +4,13 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <IsPackable>false</IsPackable>
-    <Authors>felixclase</Authors>
+    <Authors>RaisedApp</Authors>
+    <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>    
+    <PackageProjectUrl>https://github.com/raisedapp/Hangfire.Storage.SQLite</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/raisedapp/Hangfire.Storage.SQLite</RepositoryUrl>
+    <RepositoryType>git</RepositoryType> 
   </PropertyGroup>
 
   <ItemGroup>

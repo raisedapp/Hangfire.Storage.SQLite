@@ -10,7 +10,7 @@ namespace Hangfire.Storage.SQLite
     /// <summary>
     /// Represents distibuted lock implementation for SQLite
     /// </summary>
-    internal class SQLiteDistributedLock : IDisposable
+    public class SQLiteDistributedLock : IDisposable
     {
         // EventWaitHandle is not supported on UNIX systems
         // https://github.com/dotnet/coreclr/pull/1387
