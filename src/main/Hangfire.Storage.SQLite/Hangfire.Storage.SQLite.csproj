@@ -7,22 +7,26 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.0.1</Version>
-    <Authors>felixclase</Authors>
-    <Company>felixclase</Company>
+    <Version>0.0.2</Version>
+    <Authors>RaisedApp</Authors>
+    <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/felixclase/Hangfire.Storage.SQLite</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/raisedapp/Hangfire.Storage.SQLite</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/raisedapp/Hangfire.Storage.SQLite</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>hangfire hangfire-storage sqlite</PackageTags>
+    <PackageTags>Hangfire Hangfire-Storage Hangfire-Extension SQLite</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
+    <PackageReleaseNotes>
+      0.0.1
+      - Added the missing methods of the SQLiteWriteOnlyTransaction class
+    </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\..\LICENSE">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
     </None>
   </ItemGroup>
   <ItemGroup>
