@@ -394,6 +394,134 @@ namespace Hangfire.Storage.SQLite
                 }
             });
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="expireIn"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void ExpireSet(string key, TimeSpan expireIn)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            
+            QueueCommand(x =>
+            {
+                var states = x.SetRepository.Where(_ => _.Key == key).ToList();
+                foreach(var state in states)
+                {
+                    state.ExpireAt = DateTime.UtcNow.Add(expireIn);
+                    x.Database.Update(state);
+                }
+            });
+        }        
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void PersistSet(string key)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            QueueCommand(x =>
+            {
+                var states = x.SetRepository.Where(_ => _.Key == key).ToList();
+                foreach(var state in states)
+                {
+                    state.ExpireAt = DateTime.MinValue;
+                    x.Database.Update(state);
+                }
+                
+            });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void PersistList(string key)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            QueueCommand(x =>
+            {
+                var states = x.HangfireListRepository.Where(_ => _.Key == key).ToList();
+                foreach(var state in states)
+                {
+                    state.ExpireAt = DateTime.MinValue;
+                    x.Database.Update(state);
+                }       
+            });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void PersistHash(string key)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            QueueCommand(x =>
+            {
+                var states = x.HashRepository.Where(_ => _.Key == key).ToList();
+                foreach(var state in states)
+                {
+                    state.ExpireAt = DateTime.MinValue;
+                    x.Database.Update(state);
+                }    
+            });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="items"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void AddRangeToSet(string key, IList<string> items)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            
+            foreach (var item in items)
+            {
+                QueueCommand(x =>
+                {
+                    var state = new Set
+                    {
+                        Key = key,
+                        Value = item,
+                        ExpireAt = DateTime.MinValue,
+                        Score = 0.0m
+                    };
+
+                    var oldSet = x.SetRepository.FirstOrDefault(_ => _.Key == key && _.Value == item);
+
+                    if (oldSet == null)
+                    {
+                        x.Database.Insert(state);
+                    }
+                    else
+                    {
+                        state.Id = oldSet.Id;
+                        x.Database.Update(state);
+                    }
+                });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void RemoveSet(string key)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            QueueCommand(x => x.SetRepository.Delete(_ => _.Key == key));
+        }        
 
         /// <summary>
         /// 
