@@ -88,7 +88,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
         
-        [Fact(Skip = "FAIL. TODO"), CleanDatabase]
+        [Fact, CleanDatabase]
         public void Dequeue_ShouldFetchAJob_FromTheSpecifiedQueue()
         {
             // Arrange
@@ -113,7 +113,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact(Skip = "FAIL. TODO"), CleanDatabase]
+        [Fact, CleanDatabase]
         public void Dequeue_ShouldLeaveJobInTheQueue_ButSetItsFetchedAtValue()
         {
             // Arrange
@@ -149,7 +149,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
         
-        [Fact(Skip = "FAIL. TODO"), CleanDatabase]
+        [Fact, CleanDatabase]
         public void Dequeue_ShouldFetchATimedOutJobs_FromTheSpecifiedQueue()
         {
             // Arrange
@@ -181,7 +181,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact(Skip = "FAIL. TODO"), CleanDatabase]
+        [Fact, CleanDatabase]
         public void Dequeue_ShouldSetFetchedAt_OnlyForTheFetchedJob()
         {
             // Arrange
@@ -254,7 +254,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
         
-        [Fact(Skip = "FAIL. TODO"), CleanDatabase]
+        [Fact, CleanDatabase]
         public void Dequeue_ShouldFetchJobs_FromMultipleQueuesBasedOnQueuePriority()
         {
             UseConnection(connection =>

@@ -403,5 +403,157 @@ namespace Hangfire.Storage.SQLite
                 transaction.Commit();
             }
         }
+
+        public override TimeSpan GetSetTtl(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var values = DbContext
+                .SetRepository
+                .Where(_ => _.Key == key &&
+                       _.ExpireAt != DateTime.MinValue)
+                .Select(dto => dto.ExpireAt)
+                .ToList();
+
+            return values.Any() ? values.Min() - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
+        }
+
+        public override long GetCounter(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var counterQuery = DbContext
+                .CounterRepository
+                .Where(_ => _.Key == key)
+                .Select(_ => _.Value)
+                .ToList();
+
+            var aggregatedCounterQuery = DbContext
+                .AggregatedCounterRepository
+                .Where(_ => _.Key == key)
+                .Select(_ => _.Value)
+                .ToList();
+
+            var values = counterQuery
+                .Concat(aggregatedCounterQuery)
+                .ToArray();
+
+            return values.Any() ? values.Sum(x => x.ToInt64()) : 0;
+        }
+
+        public override long GetHashCount(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return DbContext
+                .HashRepository
+                .Count(_ => _.Key == key);
+        }
+
+        public override TimeSpan GetHashTtl(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var result = DbContext
+                .HashRepository
+                .Where(_ => _.Key == key)
+                .OrderBy(dto => dto.ExpireAt)
+                .Select(_ => _.ExpireAt)
+                .FirstOrDefault();
+
+            return result != DateTime.MinValue ? result - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
+        }
+
+        public override string GetValueFromHash(string key, string name)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            var result = DbContext
+                .HashRepository
+                .FirstOrDefault(_ => _.Key == key && _.Field == name);
+
+            return result?.Value as string;
+        }
+
+        public override long GetListCount(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return DbContext
+                .HangfireListRepository
+                .Count(_ => _.Key == key);
+        }
+
+        public override TimeSpan GetListTtl(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var result = DbContext
+                .HangfireListRepository
+                .Where(_ => _.Key == key)
+                .OrderBy(_ => _.ExpireAt)
+                .Select(_ => _.ExpireAt)
+                .FirstOrDefault();
+
+            return result != DateTime.MinValue ? result - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
+        }
+
+        public override List<string> GetRangeFromList(string key, int startingFrom, int endingAt)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return DbContext
+                .HangfireListRepository
+                .Where(_ => _.Key == key)
+                .OrderByDescending(_ => _.Id)
+                .Skip(startingFrom)
+                .Take(endingAt - startingFrom + 1) // inclusive -- ensure the last element is included
+                .Select(_ => (string)_.Value)
+                .ToList();
+        }
+
+        public override List<string> GetAllItemsFromList(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return DbContext
+                .HangfireListRepository
+                .Where(_ => _.Key == key)
+                .OrderByDescending(_ => _.Id)
+                .Select(_ => (string)_.Value)
+                .ToList();
+        }
     }
 }
