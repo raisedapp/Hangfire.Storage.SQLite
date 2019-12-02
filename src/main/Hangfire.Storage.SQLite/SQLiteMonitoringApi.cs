@@ -45,7 +45,7 @@ namespace Hangfire.Storage.SQLite
             List<JobDetailedDto> joinedJobs = jobs
                 .Select(job =>
                 {
-                    var state = connection.StateRepository.FirstOrDefault(_ => _.Name == stateName);
+                    var state = connection.StateRepository.FirstOrDefault(_ => _.JobId == job.Id && _.Name == stateName);
 
                     return new JobDetailedDto
                     {
@@ -422,7 +422,7 @@ namespace Hangfire.Storage.SQLite
                 stats.Servers = ctx.HangfireServerRepository.Count();
                 stats.Succeeded = GetCountIfExists(SucceededState.StateName);
                 stats.Deleted = GetCountIfExists(DeletedState.StateName);
-                stats.Recurring = ctx.StateRepository.Count(_ => _.Name == "recurring-jobs");
+                stats.Recurring = ctx.SetRepository.Count(_ => _.Key == "recurring-jobs");
                 stats.Queues = _queueProviders
                     .SelectMany(x => x.GetJobQueueMonitoringApi(ctx).GetQueues())
                     .Count();

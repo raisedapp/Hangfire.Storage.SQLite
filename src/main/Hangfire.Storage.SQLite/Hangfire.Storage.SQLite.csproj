@@ -7,7 +7,7 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.0.2</Version>
+    <Version>0.1.0</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,8 +20,9 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-      0.0.1
-      - Added the missing methods of the SQLiteWriteOnlyTransaction class
+      0.1.0
+      - Fix Recurring Job Count (Dashboard)
+      - Fix Dequeue method
     </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>

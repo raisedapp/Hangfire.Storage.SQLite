@@ -49,10 +49,17 @@ namespace Hangfire.Storage.SQLite
                 foreach (var queue in queues)
                 {
                     var lockQueue = string.Intern($"f13333e1-a0c8-48c8-bf8c-788e89030329_{queue}");
+                    var dateCondition = DateTime.UtcNow
+                        .AddSeconds(_storageOptions.InvisibilityTimeout.Negate().TotalSeconds);
+
                     lock (lockQueue)
                     {
                         fetchedJob = _dbContext.JobQueueRepository.FirstOrDefault(_ => _.Queue == queue && 
                             (_.FetchedAt == DateTime.MinValue));
+
+                        if (fetchedJob == null)
+                            fetchedJob = _dbContext.JobQueueRepository.FirstOrDefault(_ => _.Queue == queue &&
+                               _.FetchedAt < dateCondition);
 
                         if (fetchedJob != null)
                         {
@@ -64,9 +71,12 @@ namespace Hangfire.Storage.SQLite
                     }
                 }
 
-                // Wait for a while before polling again.
-                cancellationToken.WaitHandle.WaitOne(_storageOptions.QueuePollInterval);
-                cancellationToken.ThrowIfCancellationRequested();    
+                if (fetchedJob == null)
+                {
+                    // Wait for a while before polling again.
+                    cancellationToken.WaitHandle.WaitOne(_storageOptions.QueuePollInterval);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
             }
 
             return new SQLiteFetchedJob(_dbContext, fetchedJob.Id, fetchedJob.JobId, fetchedJob.Queue);

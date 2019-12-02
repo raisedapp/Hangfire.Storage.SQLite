@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using Hangfire.States;
 using Hangfire.Storage.SQLite.Entities;
@@ -82,7 +83,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="score"></param>        
         public override void AddToSet(string key, string value, double score)
         {
-            var scoreDec = score.ToInt64();
+            var scoreDec = Convert.ToDecimal(score);
 
             QueueCommand(_ =>
             {
@@ -102,8 +103,9 @@ namespace Hangfire.Storage.SQLite
                 }
                 else
                 {
-                    set.Value = value;
+                    set.Id = oldSet.Id;
                     set.Score = scoreDec;
+
                     _.Database.Update(set);
                 }
             });
@@ -111,25 +113,10 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            lock (_lockObject)
+            _commandQueue.ToList().ForEach(_ =>
             {
-                try
-                {
-                    _dbContext.Database.BeginTransaction();
-
-                    foreach (var action in _commandQueue)
-                    {
-                        action.Invoke(_dbContext);
-                    }
-
-                    _dbContext.Database.Commit();
-                }
-                catch (Exception ex)
-                {
-
-                    _dbContext.Database.Rollback();
-                }
-            }
+                _.Invoke(_dbContext);
+            });
         }
 
         /// <summary>
@@ -280,7 +267,7 @@ namespace Hangfire.Storage.SQLite
         {
             QueueCommand(_ => 
             {
-                _.HangfireListRepository.Delete(x => x.Key == key && x.Value == value);
+                _.SetRepository.Delete(x => x.Key == key && x.Value == value);
             });
         }
 
@@ -371,6 +358,28 @@ namespace Hangfire.Storage.SQLite
                     }
                 });
             }        
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="expireIn"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public override void ExpireList(string key, TimeSpan expireIn)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            QueueCommand(x =>
+            {
+                var states = x.HangfireListRepository.Where(_ => _.Key == key).ToList();
+                foreach (var state in states)
+                {
+                    state.ExpireAt = DateTime.UtcNow.Add(expireIn);
+                    x.Database.Update(state);
+                }
+
+            });
         }
 
         /// <summary>

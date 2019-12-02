@@ -55,7 +55,7 @@ namespace Hangfire.Storage.SQLite
                 .Select(_ => _.JobId)
                 .AsEnumerable().Where(jobQueueJobId =>
                 {
-                    var job = _dbContext.StateRepository.Where(x => x.JobId == jobQueueJobId).FirstOrDefault();
+                    var job = _dbContext.StateRepository.FirstOrDefault(x => x.JobId == jobQueueJobId);
                     return job != null;
                 }).ToArray();
         }
