@@ -52,12 +52,12 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                CreateJobInState(database, 1, EnqueuedState.StateName);
-                CreateJobInState(database, 2, EnqueuedState.StateName);
-                CreateJobInState(database, 4, FailedState.StateName);
-                CreateJobInState(database, 5, ProcessingState.StateName);
-                CreateJobInState(database, 6, ScheduledState.StateName);
-                CreateJobInState(database, 7, ScheduledState.StateName);
+                CreateJobInState(database, EnqueuedState.StateName);
+                CreateJobInState(database, EnqueuedState.StateName);
+                CreateJobInState(database, FailedState.StateName);
+                CreateJobInState(database, ProcessingState.StateName);
+                CreateJobInState(database, ScheduledState.StateName);
+                CreateJobInState(database, ScheduledState.StateName);
 
                 var result = monitoringApi.GetStatistics();
                 Assert.Equal(2, result.Enqueued);
@@ -82,7 +82,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var job1 = CreateJobInState(database, 1, EnqueuedState.StateName);
+                var job1 = CreateJobInState(database, EnqueuedState.StateName);
 
                 var result = monitoringApi.JobDetails(Convert.ToString(job1.Id));
 
@@ -116,7 +116,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var unfetchedJob = CreateJobInState(database, 1, EnqueuedState.StateName);
+                var unfetchedJob = CreateJobInState(database, EnqueuedState.StateName);
 
                 var jobIds = new List<int> { unfetchedJob.Id };
                 _persistentJobQueueMonitoringApi.Setup(x => x
@@ -134,7 +134,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var fetchedJob = CreateJobInState(database, 1, FetchedStateName);
+                var fetchedJob = CreateJobInState(database, FetchedStateName);
 
                 var jobIds = new List<int> { fetchedJob.Id };
                 _persistentJobQueueMonitoringApi.Setup(x => x
@@ -152,9 +152,9 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var unfetchedJob = CreateJobInState(database, 1, EnqueuedState.StateName);
-                var unfetchedJob2 = CreateJobInState(database, 2, EnqueuedState.StateName);
-                var fetchedJob = CreateJobInState(database, 3, FetchedStateName);
+                var unfetchedJob = CreateJobInState(database, EnqueuedState.StateName);
+                var unfetchedJob2 = CreateJobInState(database, EnqueuedState.StateName);
+                var fetchedJob = CreateJobInState(database, FetchedStateName);
 
                 var jobIds = new List<int> { unfetchedJob.Id, unfetchedJob2.Id, fetchedJob.Id };
                 _persistentJobQueueMonitoringApi.Setup(x => x
@@ -189,7 +189,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var fetchedJob = CreateJobInState(database, 1, FetchedStateName);
+                var fetchedJob = CreateJobInState(database, FetchedStateName);
 
                 var jobIds = new List<int> { fetchedJob.Id };
                 _persistentJobQueueMonitoringApi.Setup(x => x
@@ -207,7 +207,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var unfetchedJob = CreateJobInState(database, 1, EnqueuedState.StateName);
+                var unfetchedJob = CreateJobInState(database, EnqueuedState.StateName);
 
                 var jobIds = new List<int> { unfetchedJob.Id };
                 _persistentJobQueueMonitoringApi.Setup(x => x
@@ -225,9 +225,9 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var fetchedJob = CreateJobInState(database, 1, FetchedStateName);
-                var fetchedJob2 = CreateJobInState(database, 2, FetchedStateName);
-                var unfetchedJob = CreateJobInState(database, 3, EnqueuedState.StateName);
+                var fetchedJob = CreateJobInState(database, FetchedStateName);
+                var fetchedJob2 = CreateJobInState(database, FetchedStateName);
+                var unfetchedJob = CreateJobInState(database, EnqueuedState.StateName);
 
                 var jobIds = new List<int> { fetchedJob.Id, fetchedJob2.Id, unfetchedJob.Id };
                 _persistentJobQueueMonitoringApi.Setup(x => x
@@ -245,9 +245,9 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseMonitoringApi((database, monitoringApi) =>
             {
-                var processingJob = CreateJobInState(database, 1, ProcessingState.StateName);
+                var processingJob = CreateJobInState(database, ProcessingState.StateName);
 
-                var succeededJob = CreateJobInState(database, 2, SucceededState.StateName, liteJob =>
+                var succeededJob = CreateJobInState(database, SucceededState.StateName, liteJob =>
                 {
                     var processingState = new State()
                     {
@@ -268,7 +268,7 @@ namespace Hangfire.Storage.SQLite.Test
                     return liteJob;
                 });
 
-                var enqueuedJob = CreateJobInState(database, 3, EnqueuedState.StateName);
+                var enqueuedJob = CreateJobInState(database, EnqueuedState.StateName);
 
                 var jobIds = new List<int> { processingJob.Id, succeededJob.Id, enqueuedJob.Id };
                 _persistentJobQueueMonitoringApi.Setup(x => x
@@ -289,7 +289,7 @@ namespace Hangfire.Storage.SQLite.Test
             action(database, connection);
         }
 
-        private HangfireJob CreateJobInState(HangfireDbContext database, int jobId, string stateName, Func<HangfireJob, HangfireJob> visitor = null)
+        private HangfireJob CreateJobInState(HangfireDbContext database, string stateName, Func<HangfireJob, HangfireJob> visitor = null)
         {
             var job = Job.FromExpression(() => Console.WriteLine("TEST"));
 
@@ -312,47 +312,48 @@ namespace Hangfire.Storage.SQLite.Test
                 stateData = new Dictionary<string, string>();
             }
 
-            var jobState = new State()
+            var hangfireJob = new HangfireJob
             {
-                JobId = jobId,
-                Name = stateName,
-                Reason = null,
-                CreatedAt = DateTime.UtcNow,
-                Data = JsonConvert.SerializeObject(stateData)
-            };
-
-            var liteJob = new HangfireJob
-            {
-                Id = jobId,
                 InvocationData = SerializationHelper.Serialize(InvocationData.SerializeJob(job)),
                 Arguments = "[\"\\\"Arguments\\\"\"]",
                 StateName = stateName,
                 CreatedAt = DateTime.UtcNow
             };
 
+            database.Database.Insert(hangfireJob);
+
+            var jobState = new State()
+            {
+                JobId = hangfireJob.Id,
+                Name = stateName,
+                Reason = null,
+                CreatedAt = DateTime.UtcNow,
+                Data = JsonConvert.SerializeObject(stateData)
+            };
+
             if (visitor != null)
             {
-                liteJob = visitor(liteJob);
+                hangfireJob = visitor(hangfireJob);
             }
 
-            database.Database.Insert(liteJob);
+            
             database.Database.Insert(jobState);
 
-            var jobQueueDto = new JobQueue
+            var jobQueue = new JobQueue
             {
                 FetchedAt = DateTime.MinValue,
-                JobId = jobId,
+                JobId = hangfireJob.Id,
                 Queue = DefaultQueue
             };
 
             if (stateName == FetchedStateName)
             {
-                jobQueueDto.FetchedAt = DateTime.UtcNow;
+                jobQueue.FetchedAt = DateTime.UtcNow;
             }
 
-            database.Database.Insert(jobQueueDto);
+            database.Database.Insert(jobQueue);
 
-            return liteJob;
+            return hangfireJob;
         }
     }
 }
