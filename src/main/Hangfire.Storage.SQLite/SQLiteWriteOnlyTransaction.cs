@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using Hangfire.States;
 using Hangfire.Storage.SQLite.Entities;
@@ -112,25 +113,10 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            lock (_lockObject)
+            _commandQueue.ToList().ForEach(_ =>
             {
-                try
-                {
-                    _dbContext.Database.BeginTransaction();
-
-                    foreach (var action in _commandQueue)
-                    {
-                        action.Invoke(_dbContext);
-                    }
-
-                    _dbContext.Database.Commit();
-                }
-                catch (Exception ex)
-                {
-
-                    _dbContext.Database.Rollback();
-                }
-            }
+                _.Invoke(_dbContext);
+            });
         }
 
         /// <summary>
