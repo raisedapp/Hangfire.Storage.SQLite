@@ -45,7 +45,7 @@ namespace Hangfire.Storage.SQLite
             List<JobDetailedDto> joinedJobs = jobs
                 .Select(job =>
                 {
-                    var state = connection.StateRepository.FirstOrDefault(_ => _.Name == stateName);
+                    var state = connection.StateRepository.FirstOrDefault(_ => _.JobId == job.Id && _.Name == stateName);
 
                     return new JobDetailedDto
                     {
