@@ -1,5 +1,6 @@
 ﻿using Hangfire.Logging;
 using Hangfire.Storage.SQLite.Entities;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -134,7 +135,17 @@ namespace Hangfire.Storage.SQLite
 
                     var rowsAffected = _dbContext.Database.Update(distributedLock);
                     if (rowsAffected == 0)
-                        _dbContext.Database.Insert(distributedLock);
+                    {
+                        try
+                        {
+                            _dbContext.Database.Insert(distributedLock);
+                        }
+                        catch(SQLiteException e) when (e.Result == SQLite3.Result.Constraint)
+                        {
+                            // The lock already exists preventing us from inserting.
+                            continue;
+                        }
+                    }
 
                     // If result is null, then it means we acquired the lock
                     if (result == null)
