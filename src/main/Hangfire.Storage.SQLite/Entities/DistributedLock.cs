@@ -19,6 +19,7 @@ namespace Hangfire.Storage.SQLite.Entities
         /// <summary>
         /// The name of the resource being held.
         /// </summary>
+        [Unique]
         public string Resource { get; set; }
 
         /// <summary>
