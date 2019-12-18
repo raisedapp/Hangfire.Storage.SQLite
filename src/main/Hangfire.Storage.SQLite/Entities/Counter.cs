@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    [Table("Counter")]
+    [Table(DefaultValues.CounterTblName)]
     public class Counter
     {
         [PrimaryKey]

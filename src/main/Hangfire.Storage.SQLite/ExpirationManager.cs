@@ -29,6 +29,7 @@ namespace Hangfire.Storage.SQLite
         private static readonly string[] ProcessedTables =
         {
             DefaultValues.AggregatedCounterTblName,
+            DefaultValues.CounterTblName,
             DefaultValues.HangfireJobTblName,
             DefaultValues.HangfireListTblName,
             DefaultValues.SetTblName,
