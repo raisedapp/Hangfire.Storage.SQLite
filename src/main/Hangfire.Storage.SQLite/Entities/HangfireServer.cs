@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
-    [Table("Server")]
+    [Table(DefaultValues.HangfireServerTblName)]
     public class HangfireServer
     {
         [PrimaryKey]

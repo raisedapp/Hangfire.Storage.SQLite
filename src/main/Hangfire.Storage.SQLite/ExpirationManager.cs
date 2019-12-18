@@ -1,6 +1,7 @@
 ﻿using Hangfire.Annotations;
 using Hangfire.Logging;
 using Hangfire.Server;
+using Hangfire.Storage.SQLite.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,10 +12,29 @@ namespace Hangfire.Storage.SQLite
     /// <summary>
     /// Represents Hangfire expiration manager for LiteDB database
     /// </summary>
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
     public class ExpirationManager : IBackgroundProcess, IServerComponent
-    #pragma warning restore CS0618 
+#pragma warning restore CS0618
     {
+        private const string DistributedLockKey = "locks:expirationmanager";
+        private static readonly TimeSpan DefaultLockTimeout = TimeSpan.FromMinutes(5);
+
+        // This value should be high enough to optimize the deletion as much, as possible,
+        // reducing the number of queries. But low enough to cause lock escalations (it
+        // appears, when ~5000 locks were taken, but this number is a subject of version).
+        // Note, that lock escalation may also happen during the cascade deletions for
+        // State (3-5 rows/job usually) and JobParameters (2-3 rows/job usually) tables.
+        private const int NumberOfRecordsInSinglePass = 1000;
+
+        private static readonly string[] ProcessedTables =
+        {
+            DefaultValues.AggregatedCounterTblName,
+            DefaultValues.HangfireJobTblName,
+            DefaultValues.HangfireListTblName,
+            DefaultValues.SetTblName,
+            DefaultValues.HashTblName,
+        };
+
         private static readonly ILog Logger = LogProvider.For<ExpirationManager>();
 
         private readonly SQLiteStorage _storage;
@@ -56,16 +76,31 @@ namespace Hangfire.Storage.SQLite
         public void Execute(CancellationToken cancellationToken)
         {
             HangfireDbContext connection = _storage.CreateAndOpenConnection();
-            DateTime now = DateTime.UtcNow;
 
-            connection.HangfireJobRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
-            connection.AggregatedCounterRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
-            connection.CounterRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
-            connection.HashRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
-            connection.SetRepository.Delete(_ => _.ExpireAt > DateTime.MinValue && _.ExpireAt < now);
-            connection.HangfireListRepository.Delete(_ => _.ExpireAt > DateTime.MinValue  && _.ExpireAt < now);
+            foreach (var table in ProcessedTables)
+            {
+                Logger.Debug($"Removing outdated records from the '{table}' table...");
+
+                int affected;
+                do
+                {
+                    affected = RemoveExpireRows(connection, table);
+                } while (affected == NumberOfRecordsInSinglePass);
+
+                Logger.Trace($"Outdated records removed from the '{table}' table...");
+            }
 
             cancellationToken.WaitHandle.WaitOne(_checkInterval);
+        }
+
+        private int RemoveExpireRows(HangfireDbContext db, string table) 
+        {
+            var now = DateTime.UtcNow;
+            var deleteScript = $"DELETE FROM {table} WHERE rowid IN (SELECT rowid FROM {table} WHERE ExpireAt > {DateTime.MinValue.Ticks} AND ExpireAt < {now.Ticks} LIMIT {NumberOfRecordsInSinglePass})";
+
+            int rowsAffected = db.Database.Execute(deleteScript);
+
+            return rowsAffected;
         }
     }
 }
