@@ -96,7 +96,7 @@ namespace Hangfire.Storage.SQLite
         private int RemoveExpireRows(HangfireDbContext db, string table) 
         {
             var now = DateTime.UtcNow;
-            var deleteScript = $"DELETE FROM {table} WHERE rowid IN (SELECT rowid FROM {table} WHERE ExpireAt > {DateTime.MinValue.Ticks} AND ExpireAt < {now.Ticks} LIMIT {NumberOfRecordsInSinglePass})";
+            var deleteScript = $"DELETE FROM [{table}] WHERE rowid IN (SELECT rowid FROM [{table}] WHERE ExpireAt > {DateTime.MinValue.Ticks} AND ExpireAt < {now.Ticks} LIMIT {NumberOfRecordsInSinglePass})";
 
             int rowsAffected = db.Database.Execute(deleteScript);
 
