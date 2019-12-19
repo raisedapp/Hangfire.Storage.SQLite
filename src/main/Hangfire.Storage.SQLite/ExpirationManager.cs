@@ -98,8 +98,31 @@ namespace Hangfire.Storage.SQLite
         {
             var now = DateTime.UtcNow;
             var deleteScript = $"DELETE FROM [{table}] WHERE rowid IN (SELECT rowid FROM [{table}] WHERE ExpireAt > {DateTime.MinValue.Ticks} AND ExpireAt < {now.Ticks} LIMIT {NumberOfRecordsInSinglePass})";
+            int rowsAffected = 0;
 
-            int rowsAffected = db.Database.Execute(deleteScript);
+            try
+            {
+                var _lock = new SQLiteDistributedLock(DistributedLockKey, DefaultLockTimeout,
+                    db, db.StorageOptions);
+
+                using (_lock) 
+                {
+                    rowsAffected = db.Database.Execute(deleteScript);
+                }
+            }
+            catch (DistributedLockTimeoutException e) when (e.Resource == DistributedLockKey)
+            {
+                // DistributedLockTimeoutException here doesn't mean that outdated records weren't removed.
+                // It just means another Hangfire server did this work.
+                Logger.Log(
+                    LogLevel.Debug,
+                    () => $@"An exception was thrown during acquiring distributed lock on the {DistributedLockKey} resource within {DefaultLockTimeout.TotalSeconds} seconds. Outdated records were not removed. It will be retried in {_checkInterval.TotalSeconds} seconds.",
+                    e);
+            }
+            catch (Exception)
+            {
+
+            }
 
             return rowsAffected;
         }
