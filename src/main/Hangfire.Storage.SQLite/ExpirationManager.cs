@@ -119,9 +119,9 @@ namespace Hangfire.Storage.SQLite
                     () => $@"An exception was thrown during acquiring distributed lock on the {DistributedLockKey} resource within {DefaultLockTimeout.TotalSeconds} seconds. Outdated records were not removed. It will be retried in {_checkInterval.TotalSeconds} seconds.",
                     e);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-
+                Logger.Log(LogLevel.Error, () => $"Error in RemoveExpireRows Method. Detail: {e.ToString()}", e);
             }
 
             return rowsAffected;
