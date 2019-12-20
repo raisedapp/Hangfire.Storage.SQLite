@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
+    [Table(DefaultValues.JobParameterTblName)]
     public class JobParameter
     {
         [PrimaryKey, AutoIncrement]

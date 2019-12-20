@@ -481,7 +481,8 @@ namespace Hangfire.Storage.SQLite
                     CreatedAt = DateTime.UtcNow,
                     Job = DeserializeJob(job.InvocationData, job.Arguments),
                     History = history,
-                    Properties = jobParameters
+                    Properties = jobParameters,
+                    ExpireAt = job.ExpireAt
                 };
             });
         }

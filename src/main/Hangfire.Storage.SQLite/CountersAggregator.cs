@@ -94,7 +94,7 @@ namespace Hangfire.Storage.SQLite
 
                             foreach (var counter in aggregatedCounters)
                             {
-                                counter.Value = counter.Value + item.Value;
+                                counter.Value += item.Value;
                                 counter.ExpireAt = item.ExpireAt > aggregatedItem.ExpireAt
                                     ? (item.ExpireAt > DateTime.MinValue ? item.ExpireAt : DateTime.MinValue)
                                     : (aggregatedItem.ExpireAt > DateTime.MinValue ? 

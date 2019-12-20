@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Hangfire.Storage.SQLite.Entities
 {
+    [Table(DefaultValues.SetTblName)]
     public class Set
     {
         [PrimaryKey, AutoIncrement]

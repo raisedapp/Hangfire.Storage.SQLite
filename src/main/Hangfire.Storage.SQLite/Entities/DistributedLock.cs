@@ -8,6 +8,7 @@ namespace Hangfire.Storage.SQLite.Entities
     /// <summary>
     /// Document used for holding a distributed lock in SQLite.
     /// </summary>
+    [Table(DefaultValues.DistributedLockTblName)]
     public class DistributedLock
     {
         /// <summary>

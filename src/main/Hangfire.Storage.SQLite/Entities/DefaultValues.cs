@@ -23,5 +23,25 @@ namespace Hangfire.Storage.SQLite.Entities
         public const int MaxLengthReasonColumn = 100;
 
         public const int MaxLengthVarCharColumn = 16000;
+
+        public const string AggregatedCounterTblName = "AggregatedCounter";
+
+        public const string CounterTblName = "Counter";
+
+        public const string DistributedLockTblName = "DistributedLock";
+
+        public const string HangfireJobTblName = "Job";
+
+        public const string HangfireListTblName = "List";
+
+        public const string HangfireServerTblName = "Server";
+
+        public const string HashTblName = "Hash";
+
+        public const string JobParameterTblName = "JobParameter";
+
+        public const string SetTblName = "Set";
+
+        public const string StateTblName = "State";
     }
 }
