@@ -95,5 +95,17 @@ namespace Hangfire.Storage.SQLite
         /// Counters interval
         /// </summary>
         public TimeSpan CountersAggregateInterval { get; set; }
+
+        /// <summary>
+        /// Set AutoVacuum Mode In SQLite
+        /// </summary>
+        public AutoVacuum AutoVacuumSelected { get; set; } = AutoVacuum.NONE;
+
+        public enum AutoVacuum 
+        {
+            NONE = 0,
+            FULL = 1,
+            INCREMENTAL = 2
+        }
     }
 }
