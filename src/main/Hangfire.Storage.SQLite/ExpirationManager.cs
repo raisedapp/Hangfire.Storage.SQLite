@@ -34,6 +34,8 @@ namespace Hangfire.Storage.SQLite
             DefaultValues.HangfireListTblName,
             DefaultValues.SetTblName,
             DefaultValues.HashTblName,
+            DefaultValues.StateTblName,
+            DefaultValues.JobParameterTblName
         };
 
         private static readonly ILog Logger = LogProvider.For<ExpirationManager>();

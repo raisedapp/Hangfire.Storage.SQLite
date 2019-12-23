@@ -20,5 +20,8 @@ namespace Hangfire.Storage.SQLite.Entities
 
         [MaxLength(DefaultValues.MaxLengthVarCharColumn)]
         public string Value { get; set; }
+
+        [Indexed(Name = "IX_JobParameter_ExpireAt", Order = 3, Unique = false)]
+        public DateTime ExpireAt { get; set; } = DateTime.MinValue;
     }
 }
