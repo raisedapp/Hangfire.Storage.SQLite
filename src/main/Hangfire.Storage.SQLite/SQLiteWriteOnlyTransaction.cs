@@ -168,11 +168,15 @@ namespace Hangfire.Storage.SQLite
             {
                 var iJobId = int.Parse(jobId);
                 var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
-                
+
                 if (job != null) 
                 {
-                    job.ExpireAt = DateTime.UtcNow.Add(expireIn);
+                    var expireAt = DateTime.UtcNow.Add(expireIn);
+                    job.ExpireAt = expireAt;
+
                     _.Database.Update(job);
+                    _.Database.Execute($"UPDATE [{DefaultValues.StateTblName}] SET ExpireAt = {expireAt.Ticks} WHERE JobId = {jobId}");
+                    _.Database.Execute($"UPDATE [{DefaultValues.JobParameterTblName}] SET ExpireAt = {expireAt.Ticks} WHERE JobId = {jobId}");
                 }
             });   
         }

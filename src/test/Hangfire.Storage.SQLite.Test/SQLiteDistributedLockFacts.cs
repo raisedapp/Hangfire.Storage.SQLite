@@ -165,7 +165,7 @@ namespace Hangfire.Storage.SQLite.Test
 
             manualResetEvent.Set();
 
-            threads.ForEach(t => Assert.True(t.Join(TimeSpan.FromSeconds(90)), "Thread is hanging unexpected"));
+            threads.ForEach(t => Assert.True(t.Join(TimeSpan.FromSeconds(120)), "Thread is hanging unexpected"));
 
             // All the threads should report success.
             Interlocked.MemoryBarrier();

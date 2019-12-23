@@ -1,4 +1,5 @@
-﻿using Hangfire.Storage.SQLite.Entities;
+﻿using Hangfire.Logging;
+using Hangfire.Storage.SQLite.Entities;
 using Newtonsoft.Json;
 using SQLite;
 using System;
@@ -12,7 +13,7 @@ namespace Hangfire.Storage.SQLite
     /// </summary>
     public class HangfireDbContext
     {
-        private readonly string _prefix;
+        private readonly ILog Logger = LogProvider.For<HangfireDbContext>();
 
         /// <summary>
         /// 
@@ -106,6 +107,15 @@ namespace Hangfire.Storage.SQLite
             SetRepository = Database.Table<Set>();
             StateRepository = Database.Table<State>();
             DistributedLockRepository = Database.Table<DistributedLock>();
+
+            try
+            {
+                Database.Execute($"PRAGMA auto_vacuum = {(int) storageOptions.AutoVacuumSelected};");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, () => $"Error set auto vacuum mode. Details: {ex.ToString()}");
+            }
         }
 
         public TableQuery<AggregatedCounter> AggregatedCounterRepository { get; private set; }
