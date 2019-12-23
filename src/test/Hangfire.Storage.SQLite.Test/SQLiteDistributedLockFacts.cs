@@ -128,7 +128,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact(Skip = "Check Later.."), CleanDatabase]
+        [SkippableFact]
         public void Ctor_WaitForLock_OnlySingleLockCanBeAcquired()
         {
             var connection = ConnectionUtils.CreateConnection();

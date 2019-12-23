@@ -84,6 +84,15 @@ namespace Hangfire.Storage.SQLite
         {
             StorageOptions = storageOptions;
 
+            try
+            {
+                Database.Execute($@"PRAGMA auto_vacuum = '{(int)storageOptions.AutoVacuumSelected}'");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, () => $"Error set auto vacuum mode. Details: {ex.ToString()}");
+            }
+
             Database.CreateTable<AggregatedCounter>();
             Database.CreateTable<Counter>();
             Database.CreateTable<HangfireJob>();
@@ -107,15 +116,6 @@ namespace Hangfire.Storage.SQLite
             SetRepository = Database.Table<Set>();
             StateRepository = Database.Table<State>();
             DistributedLockRepository = Database.Table<DistributedLock>();
-
-            try
-            {
-                Database.Execute($"PRAGMA auto_vacuum = '{(int) storageOptions.AutoVacuumSelected}';");
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(LogLevel.Error, () => $"Error set auto vacuum mode. Details: {ex.ToString()}");
-            }
         }
 
         public TableQuery<AggregatedCounter> AggregatedCounterRepository { get; private set; }
