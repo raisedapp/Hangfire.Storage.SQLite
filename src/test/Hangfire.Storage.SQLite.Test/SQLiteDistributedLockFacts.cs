@@ -144,7 +144,7 @@ namespace Hangfire.Storage.SQLite.Test
                 manualResetEvent.Wait();
 
                 // Attempt to acquire the distributed lock.
-                using (new SQLiteDistributedLock("resource1", TimeSpan.FromSeconds(5), connection, new SQLiteStorageOptions()))
+                using (new SQLiteDistributedLock("resource1", TimeSpan.FromSeconds(10), connection, new SQLiteStorageOptions()))
                 {
                     // Find out if any other threads managed to acquire the lock.
                     var oldConcurrencyCounter = Interlocked.CompareExchange(ref concurrencyCounter, 1, 0);
