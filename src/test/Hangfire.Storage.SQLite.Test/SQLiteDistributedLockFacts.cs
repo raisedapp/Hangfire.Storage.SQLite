@@ -128,7 +128,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [SkippableFact]
+        [Fact, CleanDatabase]
         public void Ctor_WaitForLock_OnlySingleLockCanBeAcquired()
         {
             var connection = ConnectionUtils.CreateConnection();
@@ -165,7 +165,7 @@ namespace Hangfire.Storage.SQLite.Test
 
             manualResetEvent.Set();
 
-            threads.ForEach(t => Assert.True(t.Join(TimeSpan.FromSeconds(120)), "Thread is hanging unexpected"));
+            threads.ForEach(t => Assert.True(t.Join(TimeSpan.FromMinutes(5)), "Thread is hanging unexpected"));
 
             // All the threads should report success.
             Interlocked.MemoryBarrier();
