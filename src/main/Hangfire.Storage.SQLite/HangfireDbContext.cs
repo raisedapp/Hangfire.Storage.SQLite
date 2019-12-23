@@ -110,7 +110,7 @@ namespace Hangfire.Storage.SQLite
 
             try
             {
-                Database.Execute($"PRAGMA auto_vacuum = {(int) storageOptions.AutoVacuumSelected};");
+                Database.Execute($"PRAGMA auto_vacuum = '{(int) storageOptions.AutoVacuumSelected}';");
             }
             catch (Exception ex)
             {
