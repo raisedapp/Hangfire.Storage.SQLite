@@ -7,7 +7,7 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.2.3</Version>
+    <Version>0.2.4</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,9 +20,8 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-      0.2.3
-      - Avoid exception The given key 'X' was not present in the dictionary
-      - Fix Difference State between State Table and Job Table
+      0.2.4
+      - Lock Transaction
     </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
