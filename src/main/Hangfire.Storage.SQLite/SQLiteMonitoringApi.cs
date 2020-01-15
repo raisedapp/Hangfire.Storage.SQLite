@@ -152,7 +152,7 @@ namespace Hangfire.Storage.SQLite
                     Job = job,
                     State = sqlJob.StateName,
                     EnqueuedAt = sqlJob.StateName == EnqueuedState.StateName
-                        ? JobHelper.DeserializeNullableDateTime(stateData["EnqueuedAt"])
+                        ? JobHelper.DeserializeNullableDateTime(stateData.ContainsKey("EnqueuedAt") ? stateData["EnqueuedAt"] : string.Empty)
                         : null
                 });
         }
@@ -283,7 +283,7 @@ namespace Hangfire.Storage.SQLite
                 (sqlJob, job, stateData) => new DeletedJobDto
                 {
                     Job = job,
-                    DeletedAt = JobHelper.DeserializeNullableDateTime(stateData["DeletedAt"])
+                    DeletedAt = JobHelper.DeserializeNullableDateTime(stateData.ContainsKey("DeletedAt") ? stateData["DeletedAt"] : string.Empty)
                 }));
         }
 
@@ -360,7 +360,7 @@ namespace Hangfire.Storage.SQLite
                     ExceptionDetails = stateData["ExceptionDetails"],
                     ExceptionMessage = stateData["ExceptionMessage"],
                     ExceptionType = stateData["ExceptionType"],
-                    FailedAt = JobHelper.DeserializeNullableDateTime(stateData["FailedAt"])
+                    FailedAt = JobHelper.DeserializeNullableDateTime(stateData.ContainsKey("FailedAt") ? stateData["FailedAt"] : string.Empty)
                 }));          
         }
         
@@ -621,7 +621,7 @@ namespace Hangfire.Storage.SQLite
                     TotalDuration = stateData.ContainsKey("PerformanceDuration") && stateData.ContainsKey("Latency")
                         ? (long?)long.Parse(stateData["PerformanceDuration"]) + (long?)long.Parse(stateData["Latency"])
                         : null,
-                    SucceededAt = JobHelper.DeserializeNullableDateTime(stateData["SucceededAt"])
+                    SucceededAt = JobHelper.DeserializeNullableDateTime(stateData.ContainsKey("SucceededAt") ? stateData["SucceededAt"] : string.Empty)
                 }));        
         }
         /// <summary>
