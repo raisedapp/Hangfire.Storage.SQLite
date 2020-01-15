@@ -307,6 +307,8 @@ namespace Hangfire.Storage.SQLite
                 {
                     job.StateName = state.Name;
 
+                    _.Database.BeginTransaction();
+
                     _.Database.Insert(new State
                     {
                         JobId = iJobId,
@@ -315,8 +317,9 @@ namespace Hangfire.Storage.SQLite
                         CreatedAt = DateTime.UtcNow,
                         Data = JsonConvert.SerializeObject(state.SerializeData())
                     });
-                    
                     _.Database.Update(job);
+
+                    _.Database.Commit();
                 }
             });        
         }
