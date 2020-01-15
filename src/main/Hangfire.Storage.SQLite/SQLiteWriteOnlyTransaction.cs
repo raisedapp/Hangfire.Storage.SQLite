@@ -113,10 +113,13 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            _commandQueue.ToList().ForEach(_ =>
+            lock (_lockObject) 
             {
-                _.Invoke(_dbContext);
-            });
+                _commandQueue.ToList().ForEach(_ =>
+                {
+                    _.Invoke(_dbContext);
+                });
+            }
         }
 
         /// <summary>
@@ -307,19 +310,28 @@ namespace Hangfire.Storage.SQLite
                 {
                     job.StateName = state.Name;
 
-                    _.Database.BeginTransaction();
-
-                    _.Database.Insert(new State
+                    try
                     {
-                        JobId = iJobId,
-                        Name = state.Name,
-                        Reason = state.Reason,
-                        CreatedAt = DateTime.UtcNow,
-                        Data = JsonConvert.SerializeObject(state.SerializeData())
-                    });
-                    _.Database.Update(job);
+                        _.Database.BeginTransaction();
 
-                    _.Database.Commit();
+                        _.Database.Insert(new State
+                        {
+                            JobId = iJobId,
+                            Name = state.Name,
+                            Reason = state.Reason,
+                            CreatedAt = DateTime.UtcNow,
+                            Data = JsonConvert.SerializeObject(state.SerializeData())
+                        });
+                        _.Database.Update(job);
+
+                        _.Database.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        _.Database.Rollback();
+                        
+                        throw ex;
+                    }
                 }
             });        
         }
