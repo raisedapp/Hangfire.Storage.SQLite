@@ -21,6 +21,8 @@
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
       0.2.4
+      - Avoid exception The given key 'X' was not present in the dictionary
+      - Fix Difference State between State Table and Job Table
       - Lock Transaction
     </PackageReleaseNotes>
   </PropertyGroup>
