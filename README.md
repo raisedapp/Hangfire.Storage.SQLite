@@ -10,6 +10,15 @@ An Alternative SQLite Storage for Hangfire.
 
 This project was created by abandonment **Hangfire.SQLite** storage (https://github.com/wanlitao/HangfireExtension), as an alternative to use SQLite with Hangfire.
 
+Is production ready? **Yes**
+
+![dashboard_servers](content/dashboard_servers.png)
+
+![dashboard_recurring_jobs](content/dashboard_recurring_jobs.png)
+
+![dashboard_heartbeat](content/dashboard_heartbeat.png)
+
+
 ## Build Status
 `Platform` | `Master` | `Develop`
 --- | --- | ---
