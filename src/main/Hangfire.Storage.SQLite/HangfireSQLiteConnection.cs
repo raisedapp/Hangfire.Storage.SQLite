@@ -269,6 +269,7 @@ namespace Hangfire.Storage.SQLite
             return new JobData
             {
                 Job = job,
+                InvocationData = invocationData,
                 State = jobData.StateName,
                 CreatedAt = jobData.CreatedAt,
                 LoadException = loadException

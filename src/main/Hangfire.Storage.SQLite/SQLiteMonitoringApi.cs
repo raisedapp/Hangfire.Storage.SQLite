@@ -33,7 +33,12 @@ namespace Hangfire.Storage.SQLite
             return result;
         }
         
-        private JobList<TDto> GetJobs<TDto>(HangfireDbContext connection, int from, int count, string stateName, Func<JobDetailedDto, Job, Dictionary<string, string>, TDto> selector)
+        private JobList<TDto> GetJobs<TDto>(
+            HangfireDbContext connection,
+            int from, int count,
+            string stateName,
+            Func<JobDetailedDto, Job, InvocationData, Dictionary<string, string>, TDto> selector
+            )
         {
             var jobs = connection.HangfireJobRepository
                 .Where(_ => _.StateName == stateName)
@@ -65,22 +70,28 @@ namespace Hangfire.Storage.SQLite
             return DeserializeJobs(joinedJobs, selector);
         }
         
-        private static JobList<TDto> DeserializeJobs<TDto>(ICollection<JobDetailedDto> jobs, Func<JobDetailedDto, Job, Dictionary<string, string>, TDto> selector)
+        private static JobList<TDto> DeserializeJobs<TDto>(
+            ICollection<JobDetailedDto> jobs,
+            Func<JobDetailedDto, Job, InvocationData, Dictionary<string, string>, TDto> selector
+            )
         {
             var result = new List<KeyValuePair<string, TDto>>(jobs.Count);
 
             foreach (var job in jobs)
             {
                 var stateData = job.StateData;
-                result.Add(new KeyValuePair<string, TDto>(job.Id.ToString(), selector(job, DeserializeJob(job.InvocationData, job.Arguments), stateData)));
+                result.Add(new KeyValuePair<string, TDto>(
+                    job.Id.ToString(),
+                    selector(job, DeserializeJob(job.InvocationData, job.Arguments, out var invocationData), invocationData, stateData)
+                    ));
             }
 
             return new JobList<TDto>(result);
         }    
         
-        private static Job DeserializeJob(string invocationData, string arguments)
+        private static Job DeserializeJob(string invocationData, string arguments, out InvocationData data)
         {
-            var data = SerializationHelper.Deserialize<InvocationData>(invocationData, SerializationOption.User);
+            data = SerializationHelper.Deserialize<InvocationData>(invocationData, SerializationOption.User);
             data.Arguments = arguments;
 
             try
@@ -147,9 +158,10 @@ namespace Hangfire.Storage.SQLite
             
             return DeserializeJobs(
                 joinedJobs,
-                (sqlJob, job, stateData) => new EnqueuedJobDto
+                (sqlJob, job, invocationData, stateData) => new EnqueuedJobDto
                 {
                     Job = job,
+                    InvocationData = invocationData,
                     State = sqlJob.StateName,
                     EnqueuedAt = sqlJob.StateName == EnqueuedState.StateName
                         ? JobHelper.DeserializeNullableDateTime(stateData.ContainsKey("EnqueuedAt") ? stateData["EnqueuedAt"] : string.Empty)
@@ -268,7 +280,8 @@ namespace Hangfire.Storage.SQLite
                     job.Id.ToString(),
                     new FetchedJobDto
                     {
-                        Job = DeserializeJob(job.InvocationData, job.Arguments),
+                        Job = DeserializeJob(job.InvocationData, job.Arguments, out var invocationData),
+                        InvocationData = invocationData,
                         State = job.StateName,
                         FetchedAt = job.FetchedAt
                     }));
@@ -280,9 +293,10 @@ namespace Hangfire.Storage.SQLite
         public JobList<DeletedJobDto> DeletedJobs(int from, int count)
         {
             return UseConnection(connection => GetJobs(connection, from, count, DeletedState.StateName,
-                (sqlJob, job, stateData) => new DeletedJobDto
+                (sqlJob, job, invocationData, stateData) => new DeletedJobDto
                 {
                     Job = job,
+                    InvocationData = invocationData,
                     DeletedAt = JobHelper.DeserializeNullableDateTime(stateData.ContainsKey("DeletedAt") ? stateData["DeletedAt"] : string.Empty)
                 }));
         }
@@ -353,9 +367,10 @@ namespace Hangfire.Storage.SQLite
         public JobList<FailedJobDto> FailedJobs(int from, int count)
         {
             return UseConnection(connection => GetJobs(connection, from, count, FailedState.StateName,
-                (sqlJob, job, stateData) => new FailedJobDto
+                (sqlJob, job, invocationData, stateData) => new FailedJobDto
                 {
                     Job = job,
+                    InvocationData = invocationData,
                     Reason = sqlJob.StateReason,
                     ExceptionDetails = stateData["ExceptionDetails"],
                     ExceptionMessage = stateData["ExceptionMessage"],
@@ -479,7 +494,8 @@ namespace Hangfire.Storage.SQLite
                 return new JobDetailsDto
                 {
                     CreatedAt = DateTime.UtcNow,
-                    Job = DeserializeJob(job.InvocationData, job.Arguments),
+                    Job = DeserializeJob(job.InvocationData, job.Arguments, out var invocationData),
+                    InvocationData = invocationData,
                     History = history,
                     Properties = jobParameters,
                     ExpireAt = job.ExpireAt
@@ -508,9 +524,10 @@ namespace Hangfire.Storage.SQLite
                 connection,
                 from, count,
                 ProcessingState.StateName,
-                (sqlJob, job, stateData) => new ProcessingJobDto
+                (sqlJob, job, invocationData, stateData) => new ProcessingJobDto
                 {
                     Job = job,
+                    InvocationData = invocationData,
                     ServerId = stateData.ContainsKey("ServerId") ? stateData["ServerId"] : stateData["ServerName"],
                     StartedAt = JobHelper.DeserializeDateTime(stateData["StartedAt"]),
                 }));
@@ -565,9 +582,10 @@ namespace Hangfire.Storage.SQLite
         public JobList<ScheduledJobDto> ScheduledJobs(int from, int count)
         {
             return UseConnection(connection => GetJobs(connection, from, count, ScheduledState.StateName,
-                (sqlJob, job, stateData) => new ScheduledJobDto
+                (sqlJob, job, invocationData, stateData) => new ScheduledJobDto
                 {
                     Job = job,
+                    InvocationData = invocationData,
                     EnqueueAt = JobHelper.DeserializeDateTime(stateData["EnqueueAt"]),
                     ScheduledAt = JobHelper.DeserializeDateTime(stateData["ScheduledAt"])
                 }));
@@ -614,9 +632,10 @@ namespace Hangfire.Storage.SQLite
         public JobList<SucceededJobDto> SucceededJobs(int from, int count)
         {
             return UseConnection(connection => GetJobs(connection, from, count, SucceededState.StateName,
-                (sqlJob, job, stateData) => new SucceededJobDto
+                (sqlJob, job, invocationData, stateData) => new SucceededJobDto
                 {
                     Job = job,
+                    InvocationData = invocationData,
                     Result = stateData.ContainsKey("Result") ? stateData["Result"] : null,
                     TotalDuration = stateData.ContainsKey("PerformanceDuration") && stateData.ContainsKey("Latency")
                         ? (long?)long.Parse(stateData["PerformanceDuration"]) + (long?)long.Parse(stateData["Latency"])
