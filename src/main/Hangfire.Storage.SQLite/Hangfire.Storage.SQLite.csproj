@@ -7,8 +7,8 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.3</Version>
-    <Authors>RaisedApp</Authors>
+    <Version>0.3-HaSaM</Version>
+    <Authors>RaisedApp, HaSaM</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -33,7 +33,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Hangfire.Core" Version="1.7.12" />
+    <PackageReference Include="Hangfire.Core" Version="1.7.12-HaSaM" />
     <PackageReference Include="sqlite-net-pcl" Version="1.6.292" />
   </ItemGroup>
 
