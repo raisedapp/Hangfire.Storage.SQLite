@@ -33,19 +33,19 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Constructs Job Storage by database connection string and options
         /// </summary>
-        /// <param name="connectionString">LiteDB connection string</param>
+        /// <param name="databasePath">LiteDB connection string</param>
         /// <param name="storageOptions">Storage options</param>
-        public SQLiteStorage(string connectionString, SQLiteStorageOptions storageOptions)
+        public SQLiteStorage(string databasePath, SQLiteStorageOptions storageOptions)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
+            if (string.IsNullOrWhiteSpace(databasePath))
             {
-                throw new ArgumentNullException(nameof(connectionString));
+                throw new ArgumentNullException(nameof(databasePath));
             }
 
-            _connectionString = connectionString;
+            _connectionString = databasePath;
             _storageOptions = storageOptions ?? throw new ArgumentNullException(nameof(storageOptions));
 
-            Connection = HangfireDbContext.Instance(connectionString, storageOptions.Prefix);
+            Connection = HangfireDbContext.Instance(databasePath, storageOptions.Prefix);
             Connection.Init(_storageOptions);
 
             var defaultQueueProvider = new SQLiteJobQueueProvider(_storageOptions);

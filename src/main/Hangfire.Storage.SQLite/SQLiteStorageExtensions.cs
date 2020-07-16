@@ -30,20 +30,20 @@ namespace Hangfire.Storage.SQLite
         /// 
         /// </summary>
         /// <param name="configuration"></param>
-        /// <param name="nameOrConnectionString"></param>
+        /// <param name="databasePath"></param>
         /// <param name="options"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         public static IGlobalConfiguration<SQLiteStorage> UseSQLiteStorage(
             [NotNull] this IGlobalConfiguration configuration,
-            [NotNull] string nameOrConnectionString,
+            [NotNull] string databasePath,
             SQLiteStorageOptions options = null)
         {
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
-            if (nameOrConnectionString == null) throw new ArgumentNullException(nameof(nameOrConnectionString));
+            if (databasePath == null) throw new ArgumentNullException(nameof(databasePath));
             if (options == null) options = new SQLiteStorageOptions();
             
-            var storage = new SQLiteStorage(nameOrConnectionString, options);
+            var storage = new SQLiteStorage(databasePath, options);
             
             return configuration.UseStorage(storage);
         }
