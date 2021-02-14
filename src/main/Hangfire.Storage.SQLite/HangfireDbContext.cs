@@ -37,9 +37,9 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
-        /// <param name="connectionString">Connection string for SQLite database</param>
+        /// <param name="databasePath">the database path</param>
         /// <param name="prefix">Table prefix</param>
-        private HangfireDbContext(string connectionString, string prefix = "hangfire")
+        private HangfireDbContext(string databasePath, string prefix = "hangfire")
         {
             //UTC - Internal JSON
             GlobalConfiguration.Configuration
@@ -50,7 +50,7 @@ namespace Hangfire.Storage.SQLite
                     DateFormatString = "yyyy-MM-dd HH:mm:ss.fff"
                 });
 
-            Database = new SQLiteConnection(connectionString, SQLiteOpenFlags.ReadWrite |
+            Database = new SQLiteConnection(databasePath, SQLiteOpenFlags.ReadWrite |
                 SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex, storeDateTimeAsTicks: true);
 
             ConnectionId = Guid.NewGuid().ToString();
@@ -60,17 +60,17 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="connectionString"></param>
+        /// <param name="databasePath"></param>
         /// <param name="prefix"></param>
         /// <returns></returns>
-        internal static HangfireDbContext Instance(string connectionString, string prefix = "hangfire")
+        internal static HangfireDbContext Instance(string databasePath, string prefix = "hangfire")
         {
             if (_instance != null) return _instance;
             lock (Locker)
             {
                 if (_instance == null)
                 {
-                    _instance = new HangfireDbContext(connectionString, prefix);
+                    _instance = new HangfireDbContext(databasePath, prefix);
                 }
             }
 
