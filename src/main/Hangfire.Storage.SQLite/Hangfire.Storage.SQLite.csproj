@@ -7,7 +7,7 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.2.4</Version>
+    <Version>0.2.5</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,10 +20,9 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-      0.2.4
-      - Avoid exception The given key 'X' was not present in the dictionary
-      - Fix Difference State between State Table and Job Table
-      - Lock Transaction
+      0.2.5
+      - Change connectionString to databasePath (thanks to @petarpetrovt)
+      - sqlite-net-pcl upgrade to version 1.7.335
     </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
@@ -34,7 +33,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Hangfire.Core" Version="1.7.6" />
-    <PackageReference Include="sqlite-net-pcl" Version="1.6.292" />
+    <PackageReference Condition="'$(TargetFramework)' == 'net45'" Include="sqlite-net-pcl" Version="1.6.292" />
+    <PackageReference Condition="'$(TargetFramework)' != 'net45'" Include="sqlite-net-pcl" Version="1.7.335" />
   </ItemGroup>
 
 </Project>
