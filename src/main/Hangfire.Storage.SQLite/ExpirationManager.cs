@@ -3,8 +3,6 @@ using Hangfire.Logging;
 using Hangfire.Server;
 using Hangfire.Storage.SQLite.Entities;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Hangfire.Storage.SQLite
@@ -24,7 +22,7 @@ namespace Hangfire.Storage.SQLite
         // appears, when ~5000 locks were taken, but this number is a subject of version).
         // Note, that lock escalation may also happen during the cascade deletions for
         // State (3-5 rows/job usually) and JobParameters (2-3 rows/job usually) tables.
-        private const int NumberOfRecordsInSinglePass = 1000;
+        private const int NumberOfRecordsInSinglePass = 100;
 
         private static readonly string[] ProcessedTables =
         {
@@ -123,7 +121,7 @@ namespace Hangfire.Storage.SQLite
             }
             catch (Exception e)
             {
-                Logger.Log(LogLevel.Error, () => $"Error in RemoveExpireRows Method. Detail: {e.ToString()}", e);
+                Logger.Log(LogLevel.Error, () => $"Error in RemoveExpireRows Method. Detail: {e}", e);
             }
 
             return rowsAffected;
