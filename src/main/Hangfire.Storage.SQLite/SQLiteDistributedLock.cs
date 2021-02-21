@@ -13,13 +13,6 @@ namespace Hangfire.Storage.SQLite
     /// </summary>
     public class SQLiteDistributedLock : IDisposable
     {
-        // EventWaitHandle is not supported on UNIX systems
-        // https://github.com/dotnet/coreclr/pull/1387
-        // Instead of using a compiler directive, we catch the
-        // exception and handles it. This way, when EventWaitHandle
-        // becomes available on UNIX, we will start working.
-        private static bool _isEventWaitHandleSupported = true;
-
         private static readonly ILog Logger = LogProvider.For<SQLiteDistributedLock>();
 
         private static readonly ThreadLocal<Dictionary<string, int>> AcquiredLocks
@@ -35,7 +28,7 @@ namespace Hangfire.Storage.SQLite
 
         private bool _completed;
 
-        private string EventWaitHandleName => $@"{GetType().FullName}.{_resource}";
+        private string EventWaitHandleName => string.Intern($@"{GetType().FullName}.{_resource}");
 
         /// <summary>
         /// Creates SQLite distributed lock
@@ -154,30 +147,10 @@ namespace Hangfire.Storage.SQLite
                     }
                     else
                     {
-                        EventWaitHandle eventWaitHandle = null;
                         var waitTime = (int)timeout.TotalMilliseconds / 10;
-                        if (_isEventWaitHandleSupported)
-                        {
-                            try
-                            {
-                                // Wait on the event. This allows us to be "woken" up sooner rather than later.
-                                // We wait in chunks as we need to "wake-up" from time to time and poll mongo,
-                                // in case that the lock was acquired on another machine or instance.
-                                eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, EventWaitHandleName);
-                                eventWaitHandle.WaitOne(waitTime);
-                            }
-                            catch (PlatformNotSupportedException)
-                            {
-                                // See _isEventWaitHandleSupported definition for more info.
-                                _isEventWaitHandleSupported = false;
-                                eventWaitHandle = null;
-                            }
-                        }
-                        if (eventWaitHandle == null)
-                        {
-                            // Sleep for a while and then check if the lock has been released.
-                            Thread.Sleep(waitTime);
-                        }
+                        lock (EventWaitHandleName)
+                            Monitor.Wait(EventWaitHandleName, waitTime);
+
                         now = DateTime.UtcNow;
                     }
                 }
@@ -200,28 +173,15 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Release the lock
         /// </summary>
-        /// <exception cref="LiteDbDistributedLockException"></exception>
+        /// <exception cref="DistributedLockTimeoutException"></exception>
         private void Release()
         {
             try
             {
                 // Remove resource lock
                 _dbContext.DistributedLockRepository.Delete(_ => _.Resource == _resource);
-                if (_isEventWaitHandleSupported)
-                {
-                    try
-                    {
-                        if (EventWaitHandle.TryOpenExisting(EventWaitHandleName, out EventWaitHandle eventWaitHandler))
-                        {
-                            eventWaitHandler.Set();
-                        }
-                    }
-                    catch (PlatformNotSupportedException)
-                    {
-                        // See _isEventWaitHandleSupported definition for more info.
-                        _isEventWaitHandleSupported = false;
-                    }
-                }
+                lock (EventWaitHandleName)
+                    Monitor.Pulse(EventWaitHandleName);
             }
             catch (Exception ex)
             {

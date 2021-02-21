@@ -1,6 +1,7 @@
 # Hangfire.Storage.SQLite
 [![NuGet](https://buildstats.info/nuget/Hangfire.Storage.SQLite)](https://www.nuget.org/packages/Hangfire.Storage.SQLite)
-[![Actions Status](https://github.com/raisedapp/Hangfire.Storage.SQLite/workflows/CI-HS-SQLITE/badge.svg)](https://github.com/raisedapp/Hangfire.Storage.SQLite/actions)
+[![Actions Status Master](https://github.com/raisedapp/Hangfire.Storage.SQLite/workflows/CI-HS-SQLITE/badge.svg?branch=master)](https://github.com/raisedapp/Hangfire.Storage.SQLite/actions)
+[![Actions Status Develop](https://github.com/raisedapp/Hangfire.Storage.SQLite/workflows/CI-HS-SQLITE/badge.svg?branch=develop)](https://github.com/raisedapp/Hangfire.Storage.SQLite/actions)
 [![Official Site](https://img.shields.io/badge/site-hangfire.io-blue.svg)](http://hangfire.io)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](http://opensource.org/licenses/MIT)
 
@@ -18,12 +19,6 @@ Is production ready? **Yes**
 
 ![dashboard_heartbeat](content/dashboard_heartbeat.png)
 
-
-## Build Status
-`Platform` | `Master` | `Develop`
---- | --- | ---
-**Windows** | [![Build Status](https://circleci.com/gh/raisedapp/Hangfire.Storage.SQLite/tree/master.svg?style=svg)](https://circleci.com/gh/raisedapp/Hangfire.Storage.SQLite/tree/master) | [![Build Status](https://circleci.com/gh/raisedapp/Hangfire.Storage.SQLite/tree/develop.svg?style=svg)](https://circleci.com/gh/raisedapp/Hangfire.Storage.SQLite/tree/develop)
-**Linux / Mac OS** | [![Build Status](https://travis-ci.org/raisedapp/Hangfire.Storage.SQLite.svg?branch=master)](https://travis-ci.org/raisedapp/Hangfire.Storage.SQLite/) | [![Build Status](https://travis-ci.org/raisedapp/Hangfire.Storage.SQLite.svg?branch=develop)](https://travis-ci.org/raisedapp/Hangfire.Storage.SQLite/)
 
 ## Installation
 

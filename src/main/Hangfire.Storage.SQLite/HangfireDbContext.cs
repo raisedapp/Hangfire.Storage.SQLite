@@ -90,7 +90,7 @@ namespace Hangfire.Storage.SQLite
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, () => $"Error set auto vacuum mode. Details: {ex.ToString()}");
+                Logger.Log(LogLevel.Error, () => $"Error set auto vacuum mode. Details: {ex}");
             }
 
             Database.CreateTable<AggregatedCounter>();
