@@ -117,27 +117,33 @@ namespace Hangfire.Storage.SQLite
 
                 while (!isLockAcquired && (lockTimeoutTime >= now))
                 {
-                    var result = _dbContext.DistributedLockRepository.FirstOrDefault(_ => _.Resource == _resource);
-                    var distributedLock = result ?? new DistributedLock();
+                    DistributedLock result;
 
-                    if (string.IsNullOrWhiteSpace(distributedLock.Id))
-                        distributedLock.Id = Guid.NewGuid().ToString();
-
-                    distributedLock.Resource = _resource;
-                    distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
-
-                    var rowsAffected = _dbContext.Database.Update(distributedLock);
-                    if (rowsAffected == 0)
+                    lock (EventWaitHandleName)
                     {
-                        try
+                        result = _dbContext.DistributedLockRepository.FirstOrDefault(_ => _.Resource == _resource);
+                        var distributedLock = result ?? new DistributedLock();
+
+                        if (string.IsNullOrWhiteSpace(distributedLock.Id))
+                            distributedLock.Id = Guid.NewGuid().ToString();
+
+                        distributedLock.Resource = _resource;
+                        distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
+
+                        var rowsAffected = _dbContext.Database.Update(distributedLock);
+                        if (rowsAffected == 0)
                         {
-                            _dbContext.Database.Insert(distributedLock);
+                            try
+                            {
+                                _dbContext.Database.Insert(distributedLock);
+                            }
+                            catch (SQLiteException e) when (e.Result == SQLite3.Result.Constraint)
+                            {
+                                // The lock already exists preventing us from inserting.
+                                continue;
+                            }
                         }
-                        catch(SQLiteException e) when (e.Result == SQLite3.Result.Constraint)
-                        {
-                            // The lock already exists preventing us from inserting.
-                            continue;
-                        }
+
                     }
 
                     // If result is null, then it means we acquired the lock
@@ -195,6 +201,9 @@ namespace Hangfire.Storage.SQLite
                 // Delete expired locks
                 _dbContext.DistributedLockRepository.
                     Delete(x => x.Resource == _resource && x.ExpireAt < DateTime.UtcNow);
+
+                lock (EventWaitHandleName)
+                    Monitor.Pulse(EventWaitHandleName);
             }
             catch (Exception ex)
             {
