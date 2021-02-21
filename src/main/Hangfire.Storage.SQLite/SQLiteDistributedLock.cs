@@ -70,7 +70,7 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Disposes the object
         /// </summary>
-        /// <exception cref="LiteDbDistributedLockException"></exception>
+        /// <exception cref="DistributedLockTimeoutException"></exception>
         public void Dispose()
         {
             if (_completed)
@@ -147,9 +147,8 @@ namespace Hangfire.Storage.SQLite
                     }
                     else
                     {
-                        var waitTime = (int)timeout.TotalMilliseconds / 10;
                         lock (EventWaitHandleName)
-                            Monitor.Wait(EventWaitHandleName, waitTime);
+                            Monitor.Wait(EventWaitHandleName, timeout);
 
                         now = DateTime.UtcNow;
                     }

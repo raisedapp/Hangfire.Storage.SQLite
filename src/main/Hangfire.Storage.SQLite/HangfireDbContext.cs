@@ -35,7 +35,7 @@ namespace Hangfire.Storage.SQLite
 
 
         /// <summary>
-        /// Starts LiteDB database using a connection string for file system database
+        /// Starts SQLite database using a connection string for file system database
         /// </summary>
         /// <param name="databasePath">the database path</param>
         /// <param name="prefix">Table prefix</param>

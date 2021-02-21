@@ -8,7 +8,7 @@ using System.Threading;
 namespace Hangfire.Storage.SQLite
 {
     /// <summary>
-    /// Represents Hangfire expiration manager for LiteDB database
+    /// Represents Hangfire expiration manager for SQLite database
     /// </summary>
 #pragma warning disable CS0618
     public class ExpirationManager : IBackgroundProcess, IServerComponent
@@ -44,7 +44,7 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Constructs expiration manager with one hour checking interval
         /// </summary>
-        /// <param name="storage">LiteDb storage</param>
+        /// <param name="storage">SQLite storage</param>
         public ExpirationManager(SQLiteStorage storage)
             : this(storage, TimeSpan.FromHours(1))
         {
@@ -53,7 +53,7 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Constructs expiration manager with specified checking interval
         /// </summary>
-        /// <param name="storage">LiteDB storage</param>
+        /// <param name="storage">SQLite storage</param>
         /// <param name="checkInterval">Checking interval</param>
         public ExpirationManager(SQLiteStorage storage, TimeSpan checkInterval)
         {

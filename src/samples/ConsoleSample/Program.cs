@@ -10,7 +10,7 @@ namespace ConsoleSample
         {
             try
             {
-                // you can use LiteDB Storage and specify the connection string name
+                // you can use SQLite Storage and specify the connection string name
                 GlobalConfiguration.Configuration
                     .UseColouredConsoleLogProvider()
                     .UseSQLiteStorage();
