@@ -133,19 +133,7 @@ namespace Hangfire.Storage.SQLite
                     distributedLock.Resource = _resource;
                     distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
 
-                    var rowsAffected = _dbContext.Database.Update(distributedLock);
-                    if (rowsAffected == 0)
-                    {
-                        try
-                        {
-                            _dbContext.Database.Insert(distributedLock);
-                        }
-                        catch(SQLiteException e) when (e.Result == SQLite3.Result.Constraint)
-                        {
-                            // The lock already exists preventing us from inserting.
-                            continue;
-                        }
-                    }
+                    _dbContext.Database.InsertOrReplace(distributedLock);
 
                     // If result is null, then it means we acquired the lock
                     if (result == null)
@@ -182,7 +170,7 @@ namespace Hangfire.Storage.SQLite
                     }
                 }
 
-                if (!isLockAcquired && lockTimeoutTime >= now)
+                if (!isLockAcquired)
                 {
                     throw new DistributedLockTimeoutException($"Could not place a lock on the resource \'{_resource}\': The lock request timed out.");
                 }
