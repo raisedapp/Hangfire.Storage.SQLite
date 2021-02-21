@@ -28,7 +28,7 @@ namespace ConsoleSample
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in execution. Detail: {ex.ToString()}");
+                Console.WriteLine($"Error in execution. Detail: {ex}");
             }
             
             Console.ReadLine();
