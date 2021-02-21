@@ -143,7 +143,6 @@ namespace Hangfire.Storage.SQLite
                                 continue;
                             }
                         }
-
                     }
 
                     // If result is null, then it means we acquired the lock
@@ -153,8 +152,9 @@ namespace Hangfire.Storage.SQLite
                     }
                     else
                     {
+                        var waitTime = (int)timeout.TotalMilliseconds / 10;
                         lock (EventWaitHandleName)
-                            Monitor.Wait(EventWaitHandleName, timeout);
+                            Monitor.Wait(EventWaitHandleName, waitTime);
 
                         now = DateTime.UtcNow;
                     }
