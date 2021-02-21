@@ -173,7 +173,7 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Release the lock
         /// </summary>
-        /// <exception cref="LiteDbDistributedLockException"></exception>
+        /// <exception cref="DistributedLockTimeoutException"></exception>
         private void Release()
         {
             try
