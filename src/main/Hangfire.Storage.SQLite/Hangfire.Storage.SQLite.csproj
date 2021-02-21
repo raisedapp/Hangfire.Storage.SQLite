@@ -7,7 +7,7 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.2.6</Version>
+    <Version>0.3.0</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,7 +20,7 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-      0.2.6
+      0.3.0
       - Fix DistributedLockTimeoutException with Hangfire.Storage.SQLite
     </PackageReleaseNotes>
   </PropertyGroup>

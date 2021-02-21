@@ -10,7 +10,7 @@ namespace ConsoleSample
         {
             try
             {
-                // you can use LiteDB Storage and specify the connection string name
+                // you can use SQLite Storage and specify the connection string name
                 GlobalConfiguration.Configuration
                     .UseColouredConsoleLogProvider()
                     .UseSQLiteStorage();
@@ -28,7 +28,7 @@ namespace ConsoleSample
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in execution. Detail: {ex.ToString()}");
+                Console.WriteLine($"Error in execution. Detail: {ex}");
             }
             
             Console.ReadLine();

@@ -70,7 +70,7 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Disposes the object
         /// </summary>
-        /// <exception cref="LiteDbDistributedLockException"></exception>
+        /// <exception cref="DistributedLockTimeoutException"></exception>
         public void Dispose()
         {
             if (_completed)
@@ -117,26 +117,31 @@ namespace Hangfire.Storage.SQLite
 
                 while (!isLockAcquired && (lockTimeoutTime >= now))
                 {
-                    var result = _dbContext.DistributedLockRepository.FirstOrDefault(_ => _.Resource == _resource);
-                    var distributedLock = result ?? new DistributedLock();
+                    DistributedLock result;
 
-                    if (string.IsNullOrWhiteSpace(distributedLock.Id))
-                        distributedLock.Id = Guid.NewGuid().ToString();
-
-                    distributedLock.Resource = _resource;
-                    distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
-
-                    var rowsAffected = _dbContext.Database.Update(distributedLock);
-                    if (rowsAffected == 0)
+                    lock (EventWaitHandleName)
                     {
-                        try
+                        result = _dbContext.DistributedLockRepository.FirstOrDefault(_ => _.Resource == _resource);
+                        var distributedLock = result ?? new DistributedLock();
+
+                        if (string.IsNullOrWhiteSpace(distributedLock.Id))
+                            distributedLock.Id = Guid.NewGuid().ToString();
+
+                        distributedLock.Resource = _resource;
+                        distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
+
+                        var rowsAffected = _dbContext.Database.Update(distributedLock);
+                        if (rowsAffected == 0)
                         {
-                            _dbContext.Database.Insert(distributedLock);
-                        }
-                        catch(SQLiteException e) when (e.Result == SQLite3.Result.Constraint)
-                        {
-                            // The lock already exists preventing us from inserting.
-                            continue;
+                            try
+                            {
+                                _dbContext.Database.Insert(distributedLock);
+                            }
+                            catch (SQLiteException e) when (e.Result == SQLite3.Result.Constraint)
+                            {
+                                // The lock already exists preventing us from inserting.
+                                continue;
+                            }
                         }
                     }
 
