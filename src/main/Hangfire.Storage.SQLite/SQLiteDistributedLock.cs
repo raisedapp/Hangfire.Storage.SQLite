@@ -162,7 +162,7 @@ namespace Hangfire.Storage.SQLite
 
                 if (!isLockAcquired)
                 {
-                    throw new DistributedLockTimeoutException($"Could not place a lock on the resource \'{_resource}\': The lock request timed out.");
+                    throw new DistributedLockTimeoutException(_resource);
                 }
             }
             catch (DistributedLockTimeoutException ex)
