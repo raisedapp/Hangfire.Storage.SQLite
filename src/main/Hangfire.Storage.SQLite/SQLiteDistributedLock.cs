@@ -16,7 +16,7 @@ namespace Hangfire.Storage.SQLite
         private static readonly ILog Logger = LogProvider.For<SQLiteDistributedLock>();
 
         private static readonly ThreadLocal<Dictionary<string, int>> AcquiredLocks
-                    = new ThreadLocal<Dictionary<string, int>>(() => new Dictionary<string, int>());
+                    = new ThreadLocal<Dictionary<string, int>>(() => new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase));
 
         private readonly string _resource;
 
