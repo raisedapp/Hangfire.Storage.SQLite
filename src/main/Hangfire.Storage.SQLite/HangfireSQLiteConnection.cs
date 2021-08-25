@@ -28,7 +28,7 @@ namespace Hangfire.Storage.SQLite
         {
         }
 
-        #pragma warning disable 1591
+#pragma warning disable 1591
         public HangfireSQLiteConnection(
             HangfireDbContext database,
             SQLiteStorageOptions storageOptions,
@@ -104,7 +104,7 @@ namespace Hangfire.Storage.SQLite
 
                 var parametersArray = parameters.ToArray();
 
-                foreach (var parameter in parametersArray) 
+                foreach (var parameter in parametersArray)
                 {
                     DbContext.Database.Insert(new JobParameter()
                     {
@@ -158,7 +158,7 @@ namespace Hangfire.Storage.SQLite
                 .Where(_ => _.Key == key)
                 .Select(_ => new { _.Field, _.Value })
                 .ToList()
-                .ToDictionary(x => x.Field, x => x.Value);
+                .ToDictionary(x => x.Field, x => x.Value, StringComparer.OrdinalIgnoreCase);
 
             return result.Count != 0 ? result : null;
         }
@@ -310,11 +310,14 @@ namespace Hangfire.Storage.SQLite
             if (state == null)
                 return null;
 
+            var data = JsonConvert.DeserializeObject<Dictionary<string, string>>(state.Data);
+            data = new Dictionary<string, string>(data, StringComparer.OrdinalIgnoreCase);
+
             return new StateData
             {
                 Name = state.Name,
                 Reason = state.Reason,
-                Data = JsonConvert.DeserializeObject<Dictionary<string, string>>(state.Data)
+                Data = data
             };
         }
 
@@ -382,7 +385,7 @@ namespace Hangfire.Storage.SQLite
                 jobParameter.Value = value;
                 DbContext.Database.Update(jobParameter);
             }
-            else 
+            else
             {
                 var newParameter = new JobParameter()
                 {
