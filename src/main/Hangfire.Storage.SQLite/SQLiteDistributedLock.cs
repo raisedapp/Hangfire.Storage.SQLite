@@ -19,6 +19,7 @@ namespace Hangfire.Storage.SQLite
                     = new ThreadLocal<Dictionary<string, int>>(() => new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase));
 
         private readonly string _resource;
+        private readonly string _resourceKey;
 
         private readonly HangfireDbContext _dbContext;
 
@@ -44,6 +45,7 @@ namespace Hangfire.Storage.SQLite
             _resource = resource ?? throw new ArgumentNullException(nameof(resource));
             _dbContext = database ?? throw new ArgumentNullException(nameof(database));
             _storageOptions = storageOptions ?? throw new ArgumentNullException(nameof(storageOptions));
+            _resourceKey = Guid.NewGuid().ToString();
 
             if (string.IsNullOrEmpty(resource))
             {
@@ -92,7 +94,7 @@ namespace Hangfire.Storage.SQLite
             }
 
             // Timer callback may be invoked after the Dispose method call,
-            // so we are using lock to avoid unsynchronized calls.
+            // but since we use the resource key, we will not disturb other owners.
             AcquiredLocks.Value.Remove(_resource);
 
             if (_heartbeatTimer != null)
@@ -110,32 +112,33 @@ namespace Hangfire.Storage.SQLite
         {
             try
             {
-                // If result is null, then it means we acquired the lock
                 var isLockAcquired = false;
                 var now = DateTime.UtcNow;
                 var lockTimeoutTime = now.Add(timeout);
 
-                while (!isLockAcquired && (lockTimeoutTime >= now))
+                while (lockTimeoutTime >= now)
                 {
-                    DistributedLock result;
+                    Cleanup();
 
                     lock (EventWaitHandleName)
                     {
-                        result = _dbContext.DistributedLockRepository.FirstOrDefault(_ => _.Resource == _resource);
-                        var distributedLock = result ?? new DistributedLock();
+                        var result = _dbContext.DistributedLockRepository.FirstOrDefault(_ => _.Resource == _resource);
 
-                        if (string.IsNullOrWhiteSpace(distributedLock.Id))
-                            distributedLock.Id = Guid.NewGuid().ToString();
-
-                        distributedLock.Resource = _resource;
-                        distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
-
-                        var rowsAffected = _dbContext.Database.Update(distributedLock);
-                        if (rowsAffected == 0)
+                        if (result == null)
                         {
                             try
                             {
+                                var distributedLock = new DistributedLock();
+                                distributedLock.Id = Guid.NewGuid().ToString();
+                                distributedLock.Resource = _resource;
+                                distributedLock.ResourceKey = _resourceKey;
+                                distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
+
                                 _dbContext.Database.Insert(distributedLock);
+
+                                // we were able to acquire the lock - break the loop
+                                isLockAcquired = true;
+                                break;
                             }
                             catch (SQLiteException e) when (e.Result == SQLite3.Result.Constraint)
                             {
@@ -145,19 +148,12 @@ namespace Hangfire.Storage.SQLite
                         }
                     }
 
-                    // If result is null, then it means we acquired the lock
-                    if (result == null)
-                    {
-                        isLockAcquired = true;
-                    }
-                    else
-                    {
-                        var waitTime = (int)timeout.TotalMilliseconds / 10;
-                        lock (EventWaitHandleName)
-                            Monitor.Wait(EventWaitHandleName, waitTime);
+                    // we couldn't acquire the lock - wait a bit and try again
+                    var waitTime = (int)timeout.TotalMilliseconds / 10;
+                    lock (EventWaitHandleName)
+                        Monitor.Wait(EventWaitHandleName, waitTime);
 
-                        now = DateTime.UtcNow;
-                    }
+                    now = DateTime.UtcNow;
                 }
 
                 if (!isLockAcquired)
@@ -183,8 +179,8 @@ namespace Hangfire.Storage.SQLite
         {
             try
             {
-                // Remove resource lock
-                _dbContext.DistributedLockRepository.Delete(_ => _.Resource == _resource);
+                // Remove resource lock (if it's still ours)
+                _dbContext.DistributedLockRepository.Delete(_ => _.Resource == _resource && _.ResourceKey == _resourceKey);
                 lock (EventWaitHandleName)
                     Monitor.Pulse(EventWaitHandleName);
             }
@@ -198,7 +194,7 @@ namespace Hangfire.Storage.SQLite
         {
             try
             {
-                // Delete expired locks
+                // Delete expired locks (of any owner)
                 _dbContext.DistributedLockRepository.
                     Delete(x => x.Resource == _resource && x.ExpireAt < DateTime.UtcNow);
             }
@@ -218,13 +214,20 @@ namespace Hangfire.Storage.SQLite
             _heartbeatTimer = new Timer(state =>
             {
                 // Timer callback may be invoked after the Dispose method call,
-                // so we are using lock to avoid unsynchronized calls.
+                // but since we use the resource key, we will not disturb other owners.
                 try
                 {
-                    var distributedLock = _dbContext.DistributedLockRepository.FirstOrDefault(x => x.Resource == _resource);
-                    distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
+                    var distributedLock = _dbContext.DistributedLockRepository.FirstOrDefault(x => x.Resource == _resource && x.ResourceKey == _resourceKey);
+                    if (distributedLock != null)
+                    {
+                        distributedLock.ExpireAt = DateTime.UtcNow.Add(_storageOptions.DistributedLockLifetime);
 
-                    _dbContext.Database.Update(distributedLock);
+                        _dbContext.Database.Update(distributedLock);
+                    }
+                    else
+                    {
+                        Logger.ErrorFormat("Unable to update heartbeat on the resource '{0}'. The resource is not locked or is locked by another owner.", _resource);
+                    }
                 }
                 catch (Exception ex)
                 {
