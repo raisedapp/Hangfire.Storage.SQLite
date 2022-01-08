@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Hangfire.Common;
 using Hangfire.Server;
@@ -330,10 +329,15 @@ namespace Hangfire.Storage.SQLite
 
             var server = DbContext.HangfireServerRepository.FirstOrDefault(_ => _.Id == serverId);
             if (server == null)
-                return;
+	            throw new BackgroundServerGoneException();
 
             server.LastHeartbeat = DateTime.UtcNow;
-            DbContext.Database.Update(server);
+            var affected = DbContext.Database.Update(server);
+            
+            if (affected == 0)
+            {
+	            throw new BackgroundServerGoneException();
+            }
         }
 
         public override void RemoveServer(string serverId)
