@@ -24,6 +24,12 @@ namespace Hangfire.Storage.SQLite.Entities
         public string Resource { get; set; }
 
         /// <summary>
+        /// The owner key for this resource.
+        /// Prevents race conditions and changes to locks that are owned by other entities.
+        /// </summary>
+        public string ResourceKey { get; set; }
+
+        /// <summary>
         /// The timestamp for when the lock expires.
         /// This is used if the lock is not maintained or 
         /// cleaned up by the owner (e.g. process was shut down).

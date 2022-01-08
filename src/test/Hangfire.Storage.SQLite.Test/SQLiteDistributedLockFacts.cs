@@ -201,6 +201,30 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
+        // see https://github.com/raisedapp/Hangfire.Storage.SQLite/issues/38
+        [Fact, CleanDatabase]
+        public void Ctor_SetLockExpireAtWorks_WhenResourceIsLockedAndExpiring()
+        {
+            UseConnection(database =>
+            {
+                // add a lock (taken by another process who is now killed) which will expire in 3 seconds from now
+                database.Database.Insert(new DistributedLock
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Resource = "resource1",
+                    ExpireAt = DateTime.UtcNow.Add(TimeSpan.FromSeconds(3))
+                });
+
+                // try to get the lock in the next 10 seconds
+                // ideally, after ~3 seconds, the constructor should succeed
+                using (new SQLiteDistributedLock("resource1", TimeSpan.FromSeconds(10), database, new SQLiteStorageOptions() { DistributedLockLifetime = TimeSpan.FromSeconds(3) }))
+                {
+                    DistributedLock lockEntry = database.DistributedLockRepository.FirstOrDefault(_ => _.Resource == "resource1");
+                    Assert.NotNull(lockEntry);
+                }
+            });
+        }
+
         private static void UseConnection(Action<HangfireDbContext> action)
         {
             var connection = ConnectionUtils.CreateConnection();
