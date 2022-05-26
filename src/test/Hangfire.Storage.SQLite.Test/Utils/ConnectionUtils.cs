@@ -1,11 +1,9 @@
-using System.IO;
-
 namespace Hangfire.Storage.SQLite.Test.Utils
 {
     public static class ConnectionUtils
     {
         private const string Ext = "db";
-        
+
         private static string GetConnectionString()
         {
             return $"Hangfire-Tests.{Ext}";
@@ -14,7 +12,7 @@ namespace Hangfire.Storage.SQLite.Test.Utils
         public static SQLiteStorage CreateStorage()
         {
             var storageOptions = new SQLiteStorageOptions();
-            
+
             return CreateStorage(storageOptions);
         }
 

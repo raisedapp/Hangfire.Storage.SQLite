@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -29,7 +28,7 @@ namespace Hangfire.Storage.SQLite
         public EnqueuedAndFetchedCountDto GetEnqueuedAndFetchedCount(string queue)
         {
             var enqueuedCount = _dbContext.JobQueueRepository.Count(_ => _.Queue == queue && _.FetchedAt == DateTime.MinValue);
-            
+
             var fetchedCount = _dbContext.JobQueueRepository.Count(_ => _.Queue == queue && _.FetchedAt != DateTime.MinValue);
 
             return new EnqueuedAndFetchedCountDto

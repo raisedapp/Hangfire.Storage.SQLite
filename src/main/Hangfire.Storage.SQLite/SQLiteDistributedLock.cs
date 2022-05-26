@@ -3,7 +3,6 @@ using Hangfire.Storage.SQLite.Entities;
 using SQLite;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Hangfire.Storage.SQLite

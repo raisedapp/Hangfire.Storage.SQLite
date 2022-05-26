@@ -1,7 +1,7 @@
-using System;
-using System.Linq;
 using Hangfire.Storage.SQLite.Entities;
 using Hangfire.Storage.SQLite.Test.Utils;
+using System;
+using System.Linq;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
@@ -158,6 +158,6 @@ namespace Hangfire.Storage.SQLite.Test
         {
             var connection = ConnectionUtils.CreateConnection();
             action(connection);
-        }       
+        }
     }
 }

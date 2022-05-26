@@ -1,8 +1,8 @@
+using Hangfire.Storage.SQLite.Entities;
+using Hangfire.Storage.SQLite.Test.Utils;
 using System;
 using System.Linq;
 using System.Threading;
-using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
@@ -40,7 +40,7 @@ namespace Hangfire.Storage.SQLite.Test
                     new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
                     var locksCount =
-                        database.DistributedLockRepository.Count(_ => _.Resource== "resource1");
+                        database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                     Assert.Equal(1, locksCount);
                 }
             });
@@ -53,11 +53,11 @@ namespace Hangfire.Storage.SQLite.Test
             {
                 using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
-                    var locksCount = database.DistributedLockRepository.Count(_ => _.Resource== "resource1");
+                    var locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                     Assert.Equal(1, locksCount);
                 }
 
-                var locksCountAfter = database.DistributedLockRepository.Count(_ => _.Resource=="resource1");
+                var locksCountAfter = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                 Assert.Equal(0, locksCountAfter);
             });
         }
@@ -69,12 +69,12 @@ namespace Hangfire.Storage.SQLite.Test
             {
                 using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
-                    var locksCount = database.DistributedLockRepository.Count(_ => _.Resource=="resource1");
+                    var locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                     Assert.Equal(1, locksCount);
 
                     using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                     {
-                        locksCount = database.DistributedLockRepository.Count(_ => _.Resource== "resource1");
+                        locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                         Assert.Equal(1, locksCount);
                     }
                 }
@@ -88,7 +88,7 @@ namespace Hangfire.Storage.SQLite.Test
             {
                 using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
-                    var locksCount = database.DistributedLockRepository.Count(_ => _.Resource== "resource1");
+                    var locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                     Assert.Equal(1, locksCount);
 
                     var t = new Thread(() =>
@@ -194,7 +194,7 @@ namespace Hangfire.Storage.SQLite.Test
                     DateTime initialExpireAt = DateTime.UtcNow;
                     Thread.Sleep(TimeSpan.FromSeconds(5));
 
-                    DistributedLock lockEntry = database.DistributedLockRepository.FirstOrDefault(_ => _.Resource=="resource1");
+                    DistributedLock lockEntry = database.DistributedLockRepository.FirstOrDefault(_ => _.Resource == "resource1");
                     Assert.NotNull(lockEntry);
                     Assert.True(lockEntry.ExpireAt > initialExpireAt);
                 }
@@ -229,6 +229,6 @@ namespace Hangfire.Storage.SQLite.Test
         {
             var connection = ConnectionUtils.CreateConnection();
             action(connection);
-        }        
+        }
     }
 }

@@ -587,7 +587,7 @@ namespace Hangfire.Storage.SQLite.Test
                     WorkerCount = 1000
                 };
                 connection.AnnounceServer("server", context2);
-                
+
                 var sameServer = database.HangfireServerRepository.ToList().Single();
                 Assert.Equal("server", sameServer.Id);
                 Assert.Contains("1000", sameServer.Data);
@@ -629,10 +629,10 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact, CleanDatabase]
         public void Heartbeat_ThrowsBackgroundServerGoneException_WhenGivenServerDoesNotExist()
         {
-	        UseConnection((database, connection) => Assert.Throws<BackgroundServerGoneException>(
-		        () => connection.Heartbeat(Guid.NewGuid().ToString())));
+            UseConnection((database, connection) => Assert.Throws<BackgroundServerGoneException>(
+                () => connection.Heartbeat(Guid.NewGuid().ToString())));
         }
-        
+
         [Fact, CleanDatabase]
         public void Heartbeat_ThrowsAnException_WhenServerIdIsNull()
         {

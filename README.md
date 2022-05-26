@@ -44,6 +44,22 @@ services.AddHangfire(configuration => configuration
             .UseSQLiteStorage());
 ```
 
+## Options
+
+In the UseSQLiteStorage method you can use an instance of the Hangfire.Storage.SQLite.SQLiteStorageOptions class to specify some options of this plugin.
+
+Below is a description of them:
+
+`Option` | `Default Value`
+--- | ---
+**QueuePollInterval** |  **TimeSpan.FromSeconds(15)**
+**InvisibilityTimeout** |  **TimeSpan.FromMinutes(30)**
+**DistributedLockLifetime** | **TimeSpan.FromSeconds(30)**
+**JobExpirationCheckInterval** | **TimeSpan.FromHours(1)**
+**CountersAggregateInterval** | **TimeSpan.FromMinutes(5)**
+**AutoVacuumSelected** | **AutoVacuum.NONE**, other options: **AutoVacuum.Full** or **AutoVacuum.Incremental**
+**RecurringAutoCleanIsEnabled** | **false**, It needs to be enabled (**true**), so that it is executed at every ExpirationManager execution.
+
 ## Thanks
 
 This project is mainly based on **Hangfire.LiteDB** storage by [@codeyu](https://github.com/codeyu) (https://github.com/codeyu/Hangfire.LiteDB)

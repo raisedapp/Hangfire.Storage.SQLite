@@ -1,7 +1,7 @@
+using Hangfire.Storage.SQLite.Entities;
 using System;
 using System.Reflection;
 using System.Threading;
-using Hangfire.Storage.SQLite.Entities;
 using Xunit.Sdk;
 
 namespace Hangfire.Storage.SQLite.Test.Utils
@@ -9,7 +9,7 @@ namespace Hangfire.Storage.SQLite.Test.Utils
     public class CleanDatabaseAttribute : BeforeAfterTestAttribute
     {
         private static readonly object GlobalLock = new object();
-        
+
         public override void Before(MethodInfo methodUnderTest)
         {
             Monitor.Enter(GlobalLock);

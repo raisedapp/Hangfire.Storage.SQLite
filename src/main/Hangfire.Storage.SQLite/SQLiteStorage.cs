@@ -1,7 +1,6 @@
 ﻿using Hangfire.Server;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -85,9 +84,9 @@ namespace Hangfire.Storage.SQLite
         /// 
         /// </summary>
         /// <returns></returns>
-        #pragma warning disable 618
+#pragma warning disable 618
         public override IEnumerable<IServerComponent> GetComponents()
-        #pragma warning restore 618
+#pragma warning restore 618
         {
             yield return new ExpirationManager(this, _storageOptions.JobExpirationCheckInterval);
             yield return new CountersAggregator(this, _storageOptions.CountersAggregateInterval);
