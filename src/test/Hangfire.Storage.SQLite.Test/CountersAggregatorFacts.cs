@@ -1,8 +1,7 @@
-using System;
-using System.Threading;
 using Hangfire.Storage.SQLite.Entities;
 using Hangfire.Storage.SQLite.Test.Utils;
-using SQLite;
+using System;
+using System.Threading;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test

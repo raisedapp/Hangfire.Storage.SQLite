@@ -1,8 +1,8 @@
+using Hangfire.Storage.SQLite.Entities;
+using Hangfire.Storage.SQLite.Test.Utils;
 using System;
 using System.Linq;
 using System.Threading;
-using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
@@ -87,7 +87,7 @@ namespace Hangfire.Storage.SQLite.Test
                     queue.Dequeue(DefaultQueues, cts.Token));
             });
         }
-        
+
         [Fact, CleanDatabase]
         public void Dequeue_ShouldFetchAJob_FromTheSpecifiedQueue()
         {
@@ -129,7 +129,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 var jobQueue = new JobQueue
                 {
-                    JobId =  job.Id,
+                    JobId = job.Id,
                     Queue = "default"
                 };
                 connection.Database.Insert(jobQueue);
@@ -142,13 +142,13 @@ namespace Hangfire.Storage.SQLite.Test
                 // Assert
                 Assert.NotNull(payload);
 
-                var fetchedAt = connection.JobQueueRepository.FirstOrDefault(_ => _.JobId== payloadJobId).FetchedAt;
+                var fetchedAt = connection.JobQueueRepository.FirstOrDefault(_ => _.JobId == payloadJobId).FetchedAt;
 
                 Assert.NotEqual(fetchedAt, DateTime.MinValue);
                 Assert.True(fetchedAt > DateTime.UtcNow.AddMinutes(-1));
             });
         }
-        
+
         [Fact, CleanDatabase]
         public void Dequeue_ShouldFetchATimedOutJobs_FromTheSpecifiedQueue()
         {
@@ -165,7 +165,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 var jobQueue = new JobQueue
                 {
-                    JobId =  job.Id,
+                    JobId = job.Id,
                     Queue = "default",
                     FetchedAt = DateTime.UtcNow.AddDays(-1)
                 };
@@ -205,13 +205,13 @@ namespace Hangfire.Storage.SQLite.Test
 
                 connection.Database.Insert(new JobQueue
                 {
-                    JobId =  job1.Id,
+                    JobId = job1.Id,
                     Queue = "default"
                 });
 
                 connection.Database.Insert(new JobQueue
                 {
-                    JobId =  job2.Id,
+                    JobId = job2.Id,
                     Queue = "default"
                 });
 
@@ -222,7 +222,7 @@ namespace Hangfire.Storage.SQLite.Test
                 var payloadJobId = int.Parse(payload.JobId);
 
                 // Assert
-                var otherJobFetchedAt = connection.JobQueueRepository.FirstOrDefault(_ => _.JobId!= payloadJobId).FetchedAt;
+                var otherJobFetchedAt = connection.JobQueueRepository.FirstOrDefault(_ => _.JobId != payloadJobId).FetchedAt;
 
                 Assert.Equal(otherJobFetchedAt, DateTime.MinValue);
             });
@@ -243,7 +243,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 connection.Database.Insert(new JobQueue
                 {
-                    JobId =  job1.Id,
+                    JobId = job1.Id,
                     Queue = "critical"
                 });
 
@@ -253,7 +253,7 @@ namespace Hangfire.Storage.SQLite.Test
                 Assert.Throws<OperationCanceledException>(() => queue.Dequeue(DefaultQueues, CreateTimingOutCancellationToken()));
             });
         }
-        
+
         [Fact, CleanDatabase]
         public void Dequeue_ShouldFetchJobs_FromMultipleQueuesBasedOnQueuePriority()
         {
@@ -336,6 +336,6 @@ namespace Hangfire.Storage.SQLite.Test
         {
             var connection = ConnectionUtils.CreateConnection();
             action(connection);
-        }    
+        }
     }
 }

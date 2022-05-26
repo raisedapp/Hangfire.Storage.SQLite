@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using Hangfire.Common;
+﻿using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.Storage.SQLite.Entities;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -329,14 +329,14 @@ namespace Hangfire.Storage.SQLite
 
             var server = DbContext.HangfireServerRepository.FirstOrDefault(_ => _.Id == serverId);
             if (server == null)
-	            throw new BackgroundServerGoneException();
+                throw new BackgroundServerGoneException();
 
             server.LastHeartbeat = DateTime.UtcNow;
             var affected = DbContext.Database.Update(server);
-            
+
             if (affected == 0)
             {
-	            throw new BackgroundServerGoneException();
+                throw new BackgroundServerGoneException();
             }
         }
 

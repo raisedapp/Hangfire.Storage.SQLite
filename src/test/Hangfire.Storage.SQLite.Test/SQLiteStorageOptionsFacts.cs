@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
@@ -12,7 +11,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Ctor_SetsTheDefaultOptions()
         {
-           SQLiteStorageOptions storageOptions = new SQLiteStorageOptions();
+            SQLiteStorageOptions storageOptions = new SQLiteStorageOptions();
 
             Assert.Equal("hangfire", storageOptions.Prefix);
             Assert.True(storageOptions.InvisibilityTimeout > TimeSpan.Zero);

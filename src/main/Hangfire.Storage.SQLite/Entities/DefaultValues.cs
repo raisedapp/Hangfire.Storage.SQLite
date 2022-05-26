@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Hangfire.Storage.SQLite.Entities
+﻿namespace Hangfire.Storage.SQLite.Entities
 {
     internal static class DefaultValues
     {
