@@ -92,17 +92,6 @@ namespace Hangfire.Storage.SQLite
                 Logger.Info($"Outdated records removed from the '{table}' table...");
             }
 
-
-            if (storageConnection.RecurringAutoCleanIsEnabled &&
-                storageConnection.AutoVacuumSelected != SQLiteStorageOptions.AutoVacuum.NONE)
-            {
-                Logger.Info($"Begin autoclean database (AutoVacumm)");
-
-                connection.AutoClean(storageConnection);
-
-                Logger.Info($"End autoclean database (AutoVacumm)");
-            }
-
             cancellationToken.WaitHandle.WaitOne(_checkInterval);
         }
 

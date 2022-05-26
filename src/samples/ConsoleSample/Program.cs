@@ -13,7 +13,7 @@ namespace ConsoleSample
                 // you can use SQLite Storage and specify the connection string name
                 GlobalConfiguration.Configuration
                     .UseColouredConsoleLogProvider()
-                    .UseSQLiteStorage("Hangfire.db", new SQLiteStorageOptions() { AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL, RecurringAutoCleanIsEnabled = true });
+                    .UseSQLiteStorage("Hangfire.db", new SQLiteStorageOptions() { AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL });
 
                 //you have to create an instance of background job server at least once for background jobs to run
                 using (new BackgroundJobServer())

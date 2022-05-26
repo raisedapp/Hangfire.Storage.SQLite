@@ -22,7 +22,6 @@
     <PackageReleaseNotes>
       0.3.2
       - Clean code
-      - Add RecurringAutoCleanIsEnabled Option in SQLiteStorageOptions
       - Minimum .NET Framework (classic) set to 4.8
     </PackageReleaseNotes>
   </PropertyGroup>
