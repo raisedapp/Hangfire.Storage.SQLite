@@ -8,7 +8,7 @@ namespace Hangfire.Storage.SQLite
         /// 
         /// </summary>
         /// <param name="value"></param>
-        public static long ToInt64(this object value) 
+        public static long ToInt64(this object value)
         {
             long longValue = 0L;
 
@@ -22,6 +22,6 @@ namespace Hangfire.Storage.SQLite
             }
 
             return longValue;
-        }       
+        }
     }
 }

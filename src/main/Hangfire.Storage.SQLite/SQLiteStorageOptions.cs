@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -101,7 +99,7 @@ namespace Hangfire.Storage.SQLite
         /// </summary>
         public AutoVacuum AutoVacuumSelected { get; set; } = AutoVacuum.NONE;
 
-        public enum AutoVacuum 
+        public enum AutoVacuum
         {
             NONE = 0,
             FULL = 1,

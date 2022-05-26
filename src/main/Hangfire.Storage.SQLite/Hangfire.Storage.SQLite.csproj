@@ -4,10 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.3.1</Version>
+    <Version>0.3.2</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,10 +20,10 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-		0.3.1
-		- Revisit the logic for SQLiteDistributedLock, thanks to @fnajera-rac-de
-		- Heartbeat method should throw a BackgroundServerGoneException when no servers exist for an update, thanks to @todorovicg
-	</PackageReleaseNotes>
+      0.3.2
+      - Clean code
+      - Minimum .NET Framework (classic) set to 4.8
+    </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\..\LICENSE">

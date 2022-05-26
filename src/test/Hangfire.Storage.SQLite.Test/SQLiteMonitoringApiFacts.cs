@@ -6,7 +6,6 @@ using Moq;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
@@ -336,7 +335,7 @@ namespace Hangfire.Storage.SQLite.Test
                 hangfireJob = visitor(hangfireJob);
             }
 
-            
+
             database.Database.Insert(jobState);
 
             var jobQueue = new JobQueue

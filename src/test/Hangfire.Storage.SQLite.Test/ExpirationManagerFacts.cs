@@ -1,8 +1,8 @@
+using Hangfire.Storage.SQLite.Entities;
+using Hangfire.Storage.SQLite.Test.Utils;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
@@ -165,12 +165,12 @@ namespace Hangfire.Storage.SQLite.Test
                 .CounterRepository
                 .Count());
         }
-        
+
         private static void CreateExpirationEntries(HangfireDbContext connection, DateTime? expireAt)
         {
             Commit(connection, x => x.AddToSet("my-key", "my-value"));
             Commit(connection, x => x.AddToSet("my-key", "my-value1"));
-            Commit(connection, x => x.SetRangeInHash("my-hash-key", 
+            Commit(connection, x => x.SetRangeInHash("my-hash-key",
                 new[]
                 {
                     new KeyValuePair<string, string>("key", "value"),
@@ -210,6 +210,6 @@ namespace Hangfire.Storage.SQLite.Test
                 action(transaction);
                 transaction.Commit();
             }
-        }        
+        }
     }
 }

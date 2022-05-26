@@ -77,10 +77,11 @@ namespace Hangfire.Storage.SQLite
         public void Execute(CancellationToken cancellationToken)
         {
             HangfireDbContext connection = _storage.CreateAndOpenConnection();
+            var storageConnection = connection.StorageOptions;
 
             foreach (var table in ProcessedTables)
             {
-                Logger.Debug($"Removing outdated records from the '{table}' table...");
+                Logger.Info($"Removing outdated records from the '{table}' table...");
 
                 int affected;
                 do
@@ -88,13 +89,13 @@ namespace Hangfire.Storage.SQLite
                     affected = RemoveExpireRows(connection, table);
                 } while (affected == NumberOfRecordsInSinglePass);
 
-                Logger.Trace($"Outdated records removed from the '{table}' table...");
+                Logger.Info($"Outdated records removed from the '{table}' table...");
             }
 
             cancellationToken.WaitHandle.WaitOne(_checkInterval);
         }
 
-        private int RemoveExpireRows(HangfireDbContext db, string table) 
+        private int RemoveExpireRows(HangfireDbContext db, string table)
         {
             var now = DateTime.UtcNow;
             var deleteScript = $"DELETE FROM [{table}] WHERE rowid IN (SELECT rowid FROM [{table}] WHERE ExpireAt > {DateTime.MinValue.Ticks} AND ExpireAt < {now.Ticks} LIMIT {NumberOfRecordsInSinglePass})";
@@ -105,7 +106,7 @@ namespace Hangfire.Storage.SQLite
                 var _lock = new SQLiteDistributedLock(DistributedLockKey, DefaultLockTimeout,
                     db, db.StorageOptions);
 
-                using (_lock) 
+                using (_lock)
                 {
                     rowsAffected = db.Database.Execute(deleteScript);
                 }

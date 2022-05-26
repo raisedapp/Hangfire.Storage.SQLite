@@ -3,8 +3,6 @@ using Hangfire.Storage.SQLite.Entities;
 using Newtonsoft.Json;
 using SQLite;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -84,14 +82,7 @@ namespace Hangfire.Storage.SQLite
         {
             StorageOptions = storageOptions;
 
-            try
-            {
-                Database.Execute($@"PRAGMA auto_vacuum = '{(int)storageOptions.AutoVacuumSelected}'");
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(LogLevel.Error, () => $"Error set auto vacuum mode. Details: {ex}");
-            }
+            AutoClean(storageOptions);
 
             Database.CreateTable<AggregatedCounter>();
             Database.CreateTable<Counter>();
@@ -109,13 +100,25 @@ namespace Hangfire.Storage.SQLite
             CounterRepository = Database.Table<Counter>();
             HangfireJobRepository = Database.Table<HangfireJob>();
             HangfireListRepository = Database.Table<HangfireList>();
-            HashRepository =  Database.Table<Hash>();
+            HashRepository = Database.Table<Hash>();
             JobParameterRepository = Database.Table<JobParameter>();
             JobQueueRepository = Database.Table<JobQueue>();
             HangfireServerRepository = Database.Table<HangfireServer>();
             SetRepository = Database.Table<Set>();
             StateRepository = Database.Table<State>();
             DistributedLockRepository = Database.Table<DistributedLock>();
+        }
+
+        private void AutoClean(SQLiteStorageOptions storageOptions)
+        {
+            try
+            {
+                Database.Execute($@"PRAGMA auto_vacuum = '{(int)storageOptions.AutoVacuumSelected}'");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, () => $"Error set auto vacuum mode. Details: {ex}");
+            }
         }
 
         public TableQuery<AggregatedCounter> AggregatedCounterRepository { get; private set; }

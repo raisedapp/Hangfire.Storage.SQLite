@@ -1,6 +1,6 @@
-﻿using System;
-using Hangfire;
+﻿using Hangfire;
 using Hangfire.Storage.SQLite;
+using System;
 
 namespace ConsoleSample
 {
@@ -13,7 +13,7 @@ namespace ConsoleSample
                 // you can use SQLite Storage and specify the connection string name
                 GlobalConfiguration.Configuration
                     .UseColouredConsoleLogProvider()
-                    .UseSQLiteStorage();
+                    .UseSQLiteStorage("Hangfire.db", new SQLiteStorageOptions() { AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL });
 
                 //you have to create an instance of background job server at least once for background jobs to run
                 using (new BackgroundJobServer())
@@ -30,7 +30,7 @@ namespace ConsoleSample
             {
                 Console.WriteLine($"Error in execution. Detail: {ex}");
             }
-            
+
             Console.ReadLine();
         }
 
