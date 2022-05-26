@@ -21,7 +21,7 @@ namespace WebSample
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UseSQLiteStorage("Hangfire.db", new SQLiteStorageOptions() { AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL, RecurringAutoCleanIsEnabled = true })
+                .UseSQLiteStorage("Hangfire.db", new SQLiteStorageOptions() { AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL, JobExpirationCheckInterval = TimeSpan.FromSeconds(30) })
                 .UseHeartbeatPage(checkInterval: TimeSpan.FromSeconds(30))
                 .UseJobsLogger());
         }

@@ -57,8 +57,7 @@ Below is a description of them:
 **DistributedLockLifetime** | **TimeSpan.FromSeconds(30)**
 **JobExpirationCheckInterval** | **TimeSpan.FromHours(1)**
 **CountersAggregateInterval** | **TimeSpan.FromMinutes(5)**
-**AutoVacuumSelected** | **AutoVacuum.NONE**, other options: **AutoVacuum.Full** or **AutoVacuum.Incremental**
-**RecurringAutoCleanIsEnabled** | **false**, It needs to be enabled (**true**), so that it is executed at every ExpirationManager execution.
+**AutoVacuumSelected** | **AutoVacuum.NONE**, other options: **AutoVacuum.Full** or **AutoVacuum.Incremental** [AutoVacumm Explained](https://www.techonthenet.com/sqlite/auto_vacuum.php)
 
 ## Thanks
 

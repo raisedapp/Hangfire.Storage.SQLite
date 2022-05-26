@@ -99,8 +99,6 @@ namespace Hangfire.Storage.SQLite
         /// </summary>
         public AutoVacuum AutoVacuumSelected { get; set; } = AutoVacuum.NONE;
 
-        public bool RecurringAutoCleanIsEnabled { get; set; } = false;
-
         public enum AutoVacuum
         {
             NONE = 0,

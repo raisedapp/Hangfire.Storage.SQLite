@@ -109,7 +109,7 @@ namespace Hangfire.Storage.SQLite
             DistributedLockRepository = Database.Table<DistributedLock>();
         }
 
-        public void AutoClean(SQLiteStorageOptions storageOptions)
+        private void AutoClean(SQLiteStorageOptions storageOptions)
         {
             try
             {
