@@ -77,7 +77,6 @@ namespace Hangfire.Storage.SQLite
         public void Execute(CancellationToken cancellationToken)
         {
             HangfireDbContext connection = _storage.CreateAndOpenConnection();
-            var storageConnection = connection.StorageOptions;
 
             foreach (var table in ProcessedTables)
             {

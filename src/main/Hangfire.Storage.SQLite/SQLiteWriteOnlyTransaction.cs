@@ -17,7 +17,7 @@ namespace Hangfire.Storage.SQLite
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
-        private static object _lockObject = new object();
+        private static readonly object _lockObject = new object();
 
         /// <summary>
         /// </summary>

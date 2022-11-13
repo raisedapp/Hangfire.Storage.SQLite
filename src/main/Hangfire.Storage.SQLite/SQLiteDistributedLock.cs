@@ -1,4 +1,4 @@
-﻿using Hangfire.Logging;
+using Hangfire.Logging;
 using Hangfire.Storage.SQLite.Entities;
 using SQLite;
 using System;
@@ -8,7 +8,7 @@ using System.Threading;
 namespace Hangfire.Storage.SQLite
 {
     /// <summary>
-    /// Represents distibuted lock implementation for SQLite
+    /// Represents distributed lock implementation for SQLite
     /// </summary>
     public class SQLiteDistributedLock : IDisposable
     {
@@ -37,7 +37,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="timeout">Lock timeout</param>
         /// <param name="database">Lock database</param>
         /// <param name="storageOptions">Database options</param>
-        /// <exception cref="DistributedLockTimeoutException">Thrown if lock is not acuired within the timeout</exception>
+        /// <exception cref="DistributedLockTimeoutException">Thrown if lock is not acquired within the timeout</exception>
         public SQLiteDistributedLock(string resource, TimeSpan timeout, HangfireDbContext database,
             SQLiteStorageOptions storageOptions)
         {

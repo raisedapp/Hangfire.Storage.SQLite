@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -85,7 +85,7 @@ namespace Hangfire.Storage.SQLite
         public TimeSpan InvisibilityTimeout { get; set; }
 
         /// <summary>
-        /// Expiration check inteval for jobs
+        /// Expiration check interval for jobs
         /// </summary>
         public TimeSpan JobExpirationCheckInterval { get; set; }
 
