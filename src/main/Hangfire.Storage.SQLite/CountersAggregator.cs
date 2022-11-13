@@ -1,4 +1,4 @@
-﻿using Hangfire.Annotations;
+using Hangfire.Annotations;
 using Hangfire.Logging;
 using Hangfire.Server;
 using System;
@@ -96,9 +96,8 @@ namespace Hangfire.Storage.SQLite
                             {
                                 counter.Value += item.Value;
                                 counter.ExpireAt = item.ExpireAt > aggregatedItem.ExpireAt
-                                    ? (item.ExpireAt > DateTime.MinValue ? item.ExpireAt : DateTime.MinValue)
-                                    : (aggregatedItem.ExpireAt > DateTime.MinValue ? 
-                                        aggregatedItem.ExpireAt : DateTime.MinValue);
+                                    ? item.ExpireAt
+                                    : aggregatedItem.ExpireAt;
                                 storageDb.Database.Update(counter);
                             }
                         }

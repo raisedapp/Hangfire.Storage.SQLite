@@ -116,7 +116,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 // Assert
                 var record = connection.JobQueueRepository.ToList().Single();
-                Assert.Equal(record.FetchedAt, DateTime.MinValue);
+                Assert.Equal(record.FetchedAt, null);
             });
         }
 
@@ -136,7 +136,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 // Assert
                 var record = connection.JobQueueRepository.ToList().Single();
-                Assert.Equal(record.FetchedAt, DateTime.MinValue);
+                Assert.Equal(record.FetchedAt, null);
             });
         }
 

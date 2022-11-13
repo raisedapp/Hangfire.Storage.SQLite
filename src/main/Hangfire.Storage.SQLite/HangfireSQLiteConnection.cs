@@ -1,4 +1,4 @@
-﻿using Hangfire.Common;
+using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.Storage.SQLite.Entities;
 using Newtonsoft.Json;
@@ -421,8 +421,8 @@ namespace Hangfire.Storage.SQLite
             var values = DbContext
                 .SetRepository
                 .Where(_ => _.Key == key &&
-                       _.ExpireAt != DateTime.MinValue)
-                .Select(dto => dto.ExpireAt)
+                       _.ExpireAt != null)
+                .Select(dto => dto.ExpireAt.Value)
                 .ToList();
 
             return values.Any() ? values.Min() - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
@@ -480,7 +480,7 @@ namespace Hangfire.Storage.SQLite
                 .Select(_ => _.ExpireAt)
                 .FirstOrDefault();
 
-            return result != DateTime.MinValue ? result - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
+            return result != null ? result.Value - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
         }
 
         public override string GetValueFromHash(string key, string name)
@@ -528,7 +528,7 @@ namespace Hangfire.Storage.SQLite
                 .Select(_ => _.ExpireAt)
                 .FirstOrDefault();
 
-            return result != DateTime.MinValue ? result - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
+            return result != null ? result.Value - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
         }
 
         public override List<string> GetRangeFromList(string key, int startingFrom, int endingAt)

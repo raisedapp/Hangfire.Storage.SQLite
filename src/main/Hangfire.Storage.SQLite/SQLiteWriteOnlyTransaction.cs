@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -92,7 +92,7 @@ namespace Hangfire.Storage.SQLite
                     Score = scoreDec,
                     Key = key,
                     Value = value,
-                    ExpireAt = DateTime.MinValue
+                    ExpireAt = null
                 };
 
                 var oldSet = _.SetRepository.FirstOrDefault(x => x.Key == key && x.Value == value);
@@ -228,7 +228,7 @@ namespace Hangfire.Storage.SQLite
                 {
                     Key = key,
                     Value = value,
-                    ExpireAt = DateTime.MinValue
+                    ExpireAt = null
                 });
             });
         }
@@ -246,7 +246,7 @@ namespace Hangfire.Storage.SQLite
 
                 if (job != null) 
                 {
-                    job.ExpireAt = DateTime.MinValue;
+                    job.ExpireAt = null;
                     _.Database.Update(job);
                 }
             });
@@ -362,7 +362,7 @@ namespace Hangfire.Storage.SQLite
                         Key = key,
                         Field = field,
                         Value = value,
-                        ExpireAt = DateTime.MinValue
+                        ExpireAt = null
                     };
 
                     var oldHash = _.HashRepository.FirstOrDefault(x => x.Key == key && x.Field == field);
@@ -457,7 +457,7 @@ namespace Hangfire.Storage.SQLite
                 var states = x.SetRepository.Where(_ => _.Key == key).ToList();
                 foreach(var state in states)
                 {
-                    state.ExpireAt = DateTime.MinValue;
+                    state.ExpireAt = null;
                     x.Database.Update(state);
                 }
                 
@@ -477,7 +477,7 @@ namespace Hangfire.Storage.SQLite
                 var states = x.HangfireListRepository.Where(_ => _.Key == key).ToList();
                 foreach(var state in states)
                 {
-                    state.ExpireAt = DateTime.MinValue;
+                    state.ExpireAt = null;
                     x.Database.Update(state);
                 }       
             });
@@ -496,7 +496,7 @@ namespace Hangfire.Storage.SQLite
                 var states = x.HashRepository.Where(_ => _.Key == key).ToList();
                 foreach(var state in states)
                 {
-                    state.ExpireAt = DateTime.MinValue;
+                    state.ExpireAt = null;
                     x.Database.Update(state);
                 }    
             });
@@ -521,7 +521,7 @@ namespace Hangfire.Storage.SQLite
                     {
                         Key = key,
                         Value = item,
-                        ExpireAt = DateTime.MinValue,
+                        ExpireAt = null,
                         Score = 0.0m
                     };
 

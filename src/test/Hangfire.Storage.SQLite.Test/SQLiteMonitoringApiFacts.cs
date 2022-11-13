@@ -1,4 +1,4 @@
-﻿using Hangfire.Common;
+using Hangfire.Common;
 using Hangfire.States;
 using Hangfire.Storage.SQLite.Entities;
 using Hangfire.Storage.SQLite.Test.Utils;
@@ -340,7 +340,7 @@ namespace Hangfire.Storage.SQLite.Test
 
             var jobQueue = new JobQueue
             {
-                FetchedAt = DateTime.MinValue,
+                FetchedAt = null,
                 JobId = hangfireJob.Id,
                 Queue = DefaultQueue
             };

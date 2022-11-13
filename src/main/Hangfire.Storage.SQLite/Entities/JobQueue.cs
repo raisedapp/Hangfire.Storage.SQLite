@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 using System;
 
 namespace Hangfire.Storage.SQLite.Entities
@@ -16,6 +16,6 @@ namespace Hangfire.Storage.SQLite.Entities
         public string Queue { get; set; }
 
         [Indexed(Name = "IX_JobQueue_FetchedAt", Order = 2, Unique = false)]
-        public DateTime FetchedAt { get; set; }
+        public DateTime? FetchedAt { get; set; }
     }
 }

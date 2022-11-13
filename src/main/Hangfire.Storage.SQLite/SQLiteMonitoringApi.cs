@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -118,7 +118,7 @@ namespace Hangfire.Storage.SQLite
 
             //SQLITE PCL LIMITED LAMBDA SUPPORT!!
             var enqueuedJobs = connection.JobQueueRepository
-                .Where(_ => _.FetchedAt == DateTime.MinValue)
+                .Where(_ => _.FetchedAt == null)
                 .ToList()
                 .Where(_ => jobs.Select(x => x.Id).Contains(_.JobId))
                 .ToList();
@@ -240,7 +240,7 @@ namespace Hangfire.Storage.SQLite
 
             //SQLITE LAMBDA SUPPORT IS LIMITED!!
             var jobIdToJobQueueMap = connection.JobQueueRepository
-                .Where(_ => _.FetchedAt != DateTime.MinValue).ToList()
+                .Where(_ => _.FetchedAt != null).ToList()
                 .Where(_ => jobs.Select(x => x.Id).Contains(_.JobId))
                 .AsEnumerable()
                 .ToDictionary(_ => _.JobId, _ => _);
@@ -612,7 +612,7 @@ namespace Hangfire.Storage.SQLite
                             Name = server.Id.ToString(),
                             Heartbeat = server.LastHeartbeat,
                             Queues = data.Queues.ToList(),
-                            StartedAt = data.StartedAt ?? DateTime.MinValue,
+                            StartedAt = data.StartedAt,
                             WorkersCount = data.WorkerCount
                         }).ToList();
             });

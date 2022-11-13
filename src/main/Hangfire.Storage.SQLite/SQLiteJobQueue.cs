@@ -1,4 +1,4 @@
-﻿using Hangfire.Storage.SQLite.Entities;
+using Hangfire.Storage.SQLite.Entities;
 using System;
 using System.Threading;
 
@@ -53,7 +53,7 @@ namespace Hangfire.Storage.SQLite
                     lock (lockQueue)
                     {
                         fetchedJob = _dbContext.JobQueueRepository.FirstOrDefault(_ => _.Queue == queue &&
-                            (_.FetchedAt == DateTime.MinValue));
+                            (_.FetchedAt == null));
 
                         if (fetchedJob == null)
                             fetchedJob = _dbContext.JobQueueRepository.FirstOrDefault(_ => _.Queue == queue &&

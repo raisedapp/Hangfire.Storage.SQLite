@@ -144,7 +144,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 var fetchedAt = connection.JobQueueRepository.FirstOrDefault(_ => _.JobId == payloadJobId).FetchedAt;
 
-                Assert.NotEqual(fetchedAt, DateTime.MinValue);
+                Assert.NotEqual(fetchedAt, null);
                 Assert.True(fetchedAt > DateTime.UtcNow.AddMinutes(-1));
             });
         }
@@ -224,7 +224,7 @@ namespace Hangfire.Storage.SQLite.Test
                 // Assert
                 var otherJobFetchedAt = connection.JobQueueRepository.FirstOrDefault(_ => _.JobId != payloadJobId).FetchedAt;
 
-                Assert.Equal(otherJobFetchedAt, DateTime.MinValue);
+                Assert.Equal(otherJobFetchedAt, null);
             });
         }
 
@@ -317,7 +317,7 @@ namespace Hangfire.Storage.SQLite.Test
                 var record = connection.JobQueueRepository.ToList().Single();
                 Assert.Equal("1", record.JobId.ToString());
                 Assert.Equal("default", record.Queue);
-                Assert.Equal(record.FetchedAt, DateTime.MinValue);
+                Assert.Equal(record.FetchedAt, null);
             });
         }
 

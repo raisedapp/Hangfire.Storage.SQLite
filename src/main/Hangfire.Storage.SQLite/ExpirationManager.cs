@@ -1,4 +1,4 @@
-﻿using Hangfire.Annotations;
+using Hangfire.Annotations;
 using Hangfire.Logging;
 using Hangfire.Server;
 using Hangfire.Storage.SQLite.Entities;
@@ -98,7 +98,7 @@ namespace Hangfire.Storage.SQLite
         private int RemoveExpireRows(HangfireDbContext db, string table)
         {
             var now = DateTime.UtcNow;
-            var deleteScript = $"DELETE FROM [{table}] WHERE rowid IN (SELECT rowid FROM [{table}] WHERE ExpireAt > {DateTime.MinValue.Ticks} AND ExpireAt < {now.Ticks} LIMIT {NumberOfRecordsInSinglePass})";
+            var deleteScript = $"DELETE FROM [{table}] WHERE rowid IN (SELECT rowid FROM [{table}] WHERE ExpireAt IS NOT NULL AND ExpireAt < {now.Ticks} LIMIT {NumberOfRecordsInSinglePass})";
             int rowsAffected = 0;
 
             try
