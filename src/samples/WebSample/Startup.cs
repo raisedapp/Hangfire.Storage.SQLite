@@ -24,7 +24,8 @@ namespace WebSample
                 .UseRecommendedSerializerSettings()
                 .UseSQLiteStorage("Hangfire.db", new SQLiteStorageOptions() { AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL, JobExpirationCheckInterval = TimeSpan.FromSeconds(30) })
                 .UseHeartbeatPage(checkInterval: TimeSpan.FromSeconds(30))
-                .UseJobsLogger());
+                .UseJobsLogger())
+                .AddHangfireServer();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,7 +36,6 @@ namespace WebSample
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHangfireServer(additionalProcesses: new[] { new ProcessMonitor(checkInterval: TimeSpan.FromSeconds(30)) });
             app.UseHangfireDashboard(string.Empty);
 
             RecurringJob.AddOrUpdate(() => TaskMethod(), Cron.Minutely);
