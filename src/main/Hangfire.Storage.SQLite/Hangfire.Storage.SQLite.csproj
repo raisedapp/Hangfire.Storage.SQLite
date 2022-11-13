@@ -7,7 +7,7 @@
     <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.3.2</Version>
+    <Version>0.4.0</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,9 +20,8 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-      0.3.2
-      - Clean code
-      - Minimum .NET Framework (classic) set to 4.8
+      0.4.0
+      - Use nullable DateTime (Fixes jobs not yet started showing up in the dashboard as finished with a date thousands of years in the past)
     </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
