@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 using System;
 
 namespace Hangfire.Storage.SQLite.Entities
@@ -20,6 +20,6 @@ namespace Hangfire.Storage.SQLite.Entities
         public string Value { get; set; }
 
         [Indexed(Name = "IX_JobParameter_ExpireAt", Order = 3, Unique = false)]
-        public DateTime ExpireAt { get; set; } = DateTime.MinValue;
+        public DateTime? ExpireAt { get; set; }
     }
 }

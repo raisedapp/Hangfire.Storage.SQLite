@@ -119,7 +119,7 @@ namespace Hangfire.Storage.SQLite.Test
                 // Wait just a bit to make sure the above lock is acuired
                 Thread.Sleep(TimeSpan.FromSeconds(1));
 
-                // Record when we try to aquire the lock
+                // Record when we try to acquire the lock
                 var startTime = DateTime.UtcNow;
                 using (new SQLiteDistributedLock("resource1", TimeSpan.FromSeconds(10), database, new SQLiteStorageOptions()))
                 {

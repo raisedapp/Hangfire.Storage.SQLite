@@ -19,6 +19,6 @@ namespace Hangfire.Storage.SQLite.Entities
         /// <summary>
         /// 
         /// </summary>
-        public DateTime? StartedAt { get; set; }
+        public DateTime StartedAt { get; set; }
     }
 }

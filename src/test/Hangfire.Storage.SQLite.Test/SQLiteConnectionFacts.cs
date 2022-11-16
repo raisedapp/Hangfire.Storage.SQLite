@@ -1,4 +1,4 @@
-﻿using Hangfire.Common;
+using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.Storage.SQLite.Entities;
 using Hangfire.Storage.SQLite.Test.Utils;
@@ -1015,7 +1015,7 @@ namespace Hangfire.Storage.SQLite.Test
                     Key = "set-2",
                     Value = "2",
                     Score = 0.0m,
-                    ExpireAt = DateTime.MinValue
+                    ExpireAt = null
                 });
 
                 // Act
@@ -1186,7 +1186,7 @@ namespace Hangfire.Storage.SQLite.Test
                 {
                     Key = "hash-2",
                     Field = "field",
-                    ExpireAt = DateTime.MinValue
+                    ExpireAt = null
                 });
 
                 // Act
@@ -1346,7 +1346,7 @@ namespace Hangfire.Storage.SQLite.Test
                 database.Database.Insert(new HangfireList
                 {
                     Key = "list-2",
-                    ExpireAt = DateTime.MinValue
+                    ExpireAt = null
                 });
 
                 // Act

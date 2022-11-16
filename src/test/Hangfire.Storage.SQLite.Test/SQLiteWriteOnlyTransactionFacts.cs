@@ -1,4 +1,4 @@
-﻿using Hangfire.States;
+using Hangfire.States;
 using Hangfire.Storage.SQLite.Entities;
 using Hangfire.Storage.SQLite.Test.Utils;
 using Moq;
@@ -73,7 +73,7 @@ namespace Hangfire.Storage.SQLite.Test
                 Assert.True(DateTime.UtcNow.AddMinutes(-1) < testJob.ExpireAt && testJob.ExpireAt <= DateTime.UtcNow.AddDays(1));
 
                 var anotherTestJob = GetTestJob(database, anotherJobId);
-                Assert.Equal(DateTime.MinValue, anotherTestJob.ExpireAt);
+                Assert.Null(anotherTestJob.ExpireAt);
             });
         }
 
@@ -106,10 +106,10 @@ namespace Hangfire.Storage.SQLite.Test
                 Commit(database, x => x.PersistJob(jobId));
 
                 var testjob = GetTestJob(database, job.Id);
-                Assert.Equal(DateTime.MinValue, testjob.ExpireAt);
+                Assert.Null(testjob.ExpireAt);
 
                 var anotherTestJob = GetTestJob(database, anotherJobId);
-                Assert.NotEqual(DateTime.MinValue, anotherTestJob.ExpireAt);
+                Assert.NotNull(anotherTestJob.ExpireAt);
             });
         }
 
@@ -229,7 +229,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 Assert.Equal("my-key", record.Key);
                 Assert.Equal(1L, record.Value);
-                Assert.Equal(DateTime.MinValue, record.ExpireAt);
+                Assert.Null(record.ExpireAt);
             });
         }
 
@@ -244,7 +244,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 Assert.Equal("my-key", record.Key);
                 Assert.Equal(1L, record.Value);
-                Assert.NotEqual(DateTime.MinValue, record.ExpireAt);
+                Assert.NotNull(record.ExpireAt);
 
                 var expireAt = record.ExpireAt;
 
@@ -281,7 +281,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 Assert.Equal("my-key", record.Key);
                 Assert.Equal(-1L, record.Value);
-                Assert.Equal(DateTime.MinValue, record.ExpireAt);
+                Assert.Null(record.ExpireAt);
             });
         }
 
@@ -296,7 +296,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 Assert.Equal("my-key", record.Key);
                 Assert.Equal(-1L, record.Value);
-                Assert.NotEqual(DateTime.MinValue, record.ExpireAt);
+                Assert.NotNull(record.ExpireAt);
 
                 var expireAt = (DateTime)record.ExpireAt;
 
@@ -724,7 +724,7 @@ namespace Hangfire.Storage.SQLite.Test
 
                 var testSet2 = GetTestSet(database, set2.Key).FirstOrDefault();
                 Assert.NotNull(testSet2);
-                Assert.Equal(DateTime.MinValue, testSet2.ExpireAt);
+                Assert.Null(testSet2.ExpireAt);
             });
         }
 
@@ -745,7 +745,7 @@ namespace Hangfire.Storage.SQLite.Test
                 Assert.True(DateTime.UtcNow.AddMinutes(-1) < testList1.ExpireAt && testList1.ExpireAt <= DateTime.UtcNow.AddDays(1));
 
                 var testList2 = GetTestList(database, list2.Key);
-                Assert.Equal(DateTime.MinValue, testList2.ExpireAt);
+                Assert.Null(testList2.ExpireAt);
             });
         }
 
@@ -766,7 +766,7 @@ namespace Hangfire.Storage.SQLite.Test
                 Assert.True(DateTime.UtcNow.AddMinutes(-1) < testHash1.ExpireAt && testHash1.ExpireAt <= DateTime.UtcNow.AddDays(1));
 
                 var testHash2 = GetTestHash(database, hash2.Key);
-                Assert.Equal(DateTime.MinValue, testHash2.ExpireAt);
+                Assert.Null(testHash2.ExpireAt);
             });
         }
 
@@ -785,10 +785,10 @@ namespace Hangfire.Storage.SQLite.Test
                 Commit(database, x => x.PersistSet(set1.Key));
 
                 var testSet1 = GetTestSet(database, set1.Key).First();
-                Assert.Equal(DateTime.MinValue, testSet1.ExpireAt);
+                Assert.Null(testSet1.ExpireAt);
 
                 var testSet2 = GetTestSet(database, set2.Key).First();
-                Assert.NotEqual(DateTime.MinValue, testSet2.ExpireAt);
+                Assert.NotNull(testSet2.ExpireAt);
             });
         }
 
@@ -806,10 +806,10 @@ namespace Hangfire.Storage.SQLite.Test
                 Commit(database, x => x.PersistList(list1.Key));
 
                 var testList1 = GetTestList(database, list1.Key);
-                Assert.Equal(DateTime.MinValue, testList1.ExpireAt);
+                Assert.Null(testList1.ExpireAt);
 
                 var testList2 = GetTestList(database, list2.Key);
-                Assert.NotEqual(DateTime.MinValue, testList2.ExpireAt);
+                Assert.NotNull(testList2.ExpireAt);
             });
         }
 
@@ -827,10 +827,10 @@ namespace Hangfire.Storage.SQLite.Test
                 Commit(database, x => x.PersistHash(hash1.Key));
 
                 var testHash1 = GetTestHash(database, hash1.Key);
-                Assert.Equal(DateTime.MinValue, testHash1.ExpireAt);
+                Assert.Null(testHash1.ExpireAt);
 
                 var testHash2 = GetTestHash(database, hash2.Key);
-                Assert.NotEqual(DateTime.MinValue, testHash2.ExpireAt);
+                Assert.NotNull(testHash2.ExpireAt);
             });
         }
 
