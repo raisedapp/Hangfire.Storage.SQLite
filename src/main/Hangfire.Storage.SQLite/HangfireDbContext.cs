@@ -1,4 +1,4 @@
-﻿using Hangfire.Logging;
+using Hangfire.Logging;
 using Hangfire.Storage.SQLite.Entities;
 using Newtonsoft.Json;
 using SQLite;
@@ -39,15 +39,6 @@ namespace Hangfire.Storage.SQLite
         /// <param name="prefix">Table prefix</param>
         private HangfireDbContext(string databasePath, string prefix = "hangfire")
         {
-            //UTC - Internal JSON
-            GlobalConfiguration.Configuration
-                .UseSerializerSettings(new JsonSerializerSettings()
-                {
-                    DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                    DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                    DateFormatString = "yyyy-MM-dd HH:mm:ss.fff"
-                });
-
             Database = new SQLiteConnection(databasePath, SQLiteOpenFlags.ReadWrite |
                 SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex, storeDateTimeAsTicks: true);
 
