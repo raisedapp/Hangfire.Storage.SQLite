@@ -192,7 +192,7 @@ namespace Hangfire.Storage.SQLite
             var result = new Dictionary<DateTime, long>();
             for (var i = 0; i < stringDates.Count; i++)
             {
-                var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
+                var value = valuesAggregatorMap[$"stats:{type}:{stringDates[i]}"];
                 result.Add(dates[i], value.ToInt64());
             }
 
@@ -225,7 +225,7 @@ namespace Hangfire.Storage.SQLite
             var result = new Dictionary<DateTime, long>();
             for (var i = 0; i < dates.Count; i++)
             {
-                var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
+                var value = valuesAggregatorMap[$"stats:{type}:{dates[i]:yyyy-MM-dd-HH}"];
                 result.Add(dates[i], value.ToInt64());
             }
 
