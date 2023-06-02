@@ -192,7 +192,7 @@ namespace Hangfire.Storage.SQLite
             var result = new Dictionary<DateTime, long>();
             for (var i = 0; i < stringDates.Count; i++)
             {
-                var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
+                var value = valuesAggregatorMap[$"stats:{type}:{stringDates[i]}"];
                 result.Add(dates[i], value.ToInt64());
             }
 
@@ -225,7 +225,7 @@ namespace Hangfire.Storage.SQLite
             var result = new Dictionary<DateTime, long>();
             for (var i = 0; i < dates.Count; i++)
             {
-                var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
+                var value = valuesAggregatorMap[$"stats:{type}:{dates[i]:yyyy-MM-dd-HH}"];
                 result.Add(dates[i], value.ToInt64());
             }
 
@@ -418,13 +418,7 @@ namespace Hangfire.Storage.SQLite
             {
                 var stats = new StatisticsDto();
 
-                var countByStates = ctx.HangfireJobRepository.Where(_ => _.StateName != null)
-                    .GroupBy(x => x.StateName)
-                    .Select(k => new { StateName = k.Key, Count = k.Count() })
-                    .AsEnumerable()
-                    .ToDictionary(kv => kv.StateName, kv => kv.Count, StringComparer.OrdinalIgnoreCase);
-
-                int GetCountIfExists(string name) => countByStates.ContainsKey(name) ? countByStates[name] : 0;
+                int GetCountIfExists(string name) => ctx.HangfireJobRepository.Count(_ => _.StateName == name);
 
                 stats.Enqueued = GetCountIfExists(EnqueuedState.StateName);
                 stats.Failed = GetCountIfExists(FailedState.StateName);
@@ -473,7 +467,20 @@ namespace Hangfire.Storage.SQLite
 
                 var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
                 var jobHistory = _.StateRepository.Where(x => x.JobId == iJobId).ToList();
-                var jobParameters = _.JobParameterRepository.Where(x => x.JobId == iJobId).ToList().ToDictionary(x => x.Name, x => x.Value);
+                var jobParameters =
+                _.JobParameterRepository
+                .Where(x => x.JobId == iJobId)
+                .GroupBy(x => x.Name, x => new { x.Value, x.Id }, (name, val) => new
+                {
+                    Name = name,
+                    Value = val
+                                .OrderByDescending(x => x.Id)
+                                .FirstOrDefault()
+                                .Value
+
+                })
+                .ToList()
+                .ToDictionary(x => x.Name, x => x.Value);
 
                 if (job == null)
                     return null;

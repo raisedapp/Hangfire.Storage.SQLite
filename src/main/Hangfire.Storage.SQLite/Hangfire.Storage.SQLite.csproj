@@ -20,6 +20,9 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
+      0.3.2
+      - Clean code
+      - Minimum .NET Framework (classic) set to 4.8
       0.4.0
       - Use nullable DateTime (Fixes jobs not yet started showing up in the dashboard as finished with a date thousands of years in the past)
       - Update sqlite-net-pcl to version 1.8.116
@@ -32,7 +35,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Hangfire.Core" Version="1.7.31" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net45'" Include="sqlite-net-pcl" Version="1.6.292" />
     <PackageReference Condition="'$(TargetFramework)' != 'net45'" Include="sqlite-net-pcl" Version="1.8.116" />
   </ItemGroup>

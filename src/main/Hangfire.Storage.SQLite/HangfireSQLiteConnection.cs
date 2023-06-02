@@ -155,7 +155,17 @@ namespace Hangfire.Storage.SQLite
             var result = DbContext
                 .HashRepository
                 .Where(_ => _.Key == key)
-                .Select(_ => new { _.Field, _.Value })
+                .GroupBy(
+                    _ => _.Field,
+                    _ => new { _.Value, _.Id },
+                    (field, val) => new
+                    {
+                        Field = field,
+                        Value = val
+                                .OrderByDescending(_ => _.Id)  // Choose the latest submitted value
+                                .FirstOrDefault()
+                                .Value
+                    })
                 .ToList()
                 .ToDictionary(x => x.Field, x => x.Value, StringComparer.OrdinalIgnoreCase);
 
