@@ -2,7 +2,7 @@ using System;
 
 namespace Hangfire.Storage.SQLite
 {
-    public static class ObjectExtensions
+    internal static class ObjectExtensions
     {
         /// <summary>
         /// 

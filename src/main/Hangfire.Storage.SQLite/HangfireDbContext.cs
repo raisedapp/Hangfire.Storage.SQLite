@@ -23,9 +23,6 @@ namespace Hangfire.Storage.SQLite
         /// </summary>
         public SQLiteStorageOptions StorageOptions { get; private set; }
 
-        private static readonly object Locker = new object();
-        private static volatile HangfireDbContext _instance;
-
         /// <summary>
         /// SQLite database connection identifier
         /// </summary>
@@ -35,9 +32,10 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Starts SQLite database using a connection string for file system database
         /// </summary>
-        /// <param name="databasePath">the database path</param>
+        /// <param name="connection">the database path</param>
+        /// <param name="logger"></param>
         /// <param name="prefix">Table prefix</param>
-        private HangfireDbContext(string databasePath, string prefix = "hangfire")
+        internal HangfireDbContext(SQLiteConnection connection, string prefix = "hangfire")
         {
             //UTC - Internal JSON
             GlobalConfiguration.Configuration
@@ -48,31 +46,9 @@ namespace Hangfire.Storage.SQLite
                     DateFormatString = "yyyy-MM-dd HH:mm:ss.fff"
                 });
 
-            Database = new SQLiteConnection(databasePath, SQLiteOpenFlags.ReadWrite |
-                SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex, storeDateTimeAsTicks: true);
+            Database = connection;
 
             ConnectionId = Guid.NewGuid().ToString();
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="databasePath"></param>
-        /// <param name="prefix"></param>
-        /// <returns></returns>
-        internal static HangfireDbContext Instance(string databasePath, string prefix = "hangfire")
-        {
-            if (_instance != null) return _instance;
-            lock (Locker)
-            {
-                if (_instance == null)
-                {
-                    _instance = new HangfireDbContext(databasePath, prefix);
-                }
-            }
-
-            return _instance;
         }
 
         /// <summary>
@@ -82,7 +58,7 @@ namespace Hangfire.Storage.SQLite
         {
             StorageOptions = storageOptions;
 
-            AutoClean(storageOptions);
+            InitializePragmas(storageOptions);
 
             Database.CreateTable<AggregatedCounter>();
             Database.CreateTable<Counter>();
@@ -109,11 +85,20 @@ namespace Hangfire.Storage.SQLite
             DistributedLockRepository = Database.Table<DistributedLock>();
         }
 
-        private void AutoClean(SQLiteStorageOptions storageOptions)
+        private void InitializePragmas(SQLiteStorageOptions storageOptions)
         {
             try
             {
-                Database.Execute($@"PRAGMA auto_vacuum = '{(int)storageOptions.AutoVacuumSelected}'");
+                Database.ExecuteScalar<string>($"PRAGMA journal_mode = {storageOptions.JournalMode}", Array.Empty<object>());
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, () => $"Error set journal mode. Details: {ex}");
+            }
+
+            try
+            {
+                Database.ExecuteScalar<string>($"PRAGMA auto_vacuum = '{(int)storageOptions.AutoVacuumSelected}'", Array.Empty<object>());
             }
             catch (Exception ex)
             {
