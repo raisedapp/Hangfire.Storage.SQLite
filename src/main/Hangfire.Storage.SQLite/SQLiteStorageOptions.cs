@@ -105,5 +105,17 @@ namespace Hangfire.Storage.SQLite
             FULL = 1,
             INCREMENTAL = 2
         }
+
+        public JournalModes JournalMode { get; set; } = JournalModes.DELETE;
+
+        public enum JournalModes
+        {
+            DELETE,
+            TRUNCATE,
+            PERSIST,
+            MEMORY,
+            WAL,
+            OFF
+        }
     }
 }

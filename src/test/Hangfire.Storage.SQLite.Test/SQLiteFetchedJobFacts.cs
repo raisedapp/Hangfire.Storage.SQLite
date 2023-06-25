@@ -6,7 +6,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class SQLiteFetchedJobFacts
     {
         private const int JobId = 0;
@@ -59,7 +58,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromQueue_ReallyDeletesTheJobFromTheQueue()
         {
             UseConnection(connection =>
@@ -79,7 +78,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromQueue_DoesNotDelete_UnrelatedJobs()
         {
             UseConnection(connection =>
@@ -100,7 +99,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Requeue_SetsFetchedAtValueToNull()
         {
             UseConnection(connection =>
@@ -120,7 +119,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dispose_SetsFetchedAtValueToNull_IfThereWereNoCallsToComplete()
         {
             UseConnection(connection =>

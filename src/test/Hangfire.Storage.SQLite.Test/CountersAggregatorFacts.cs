@@ -6,10 +6,9 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class CountersAggregatorFacts
     {
-        [Fact, CleanDatabase]
+        [Fact]
         public void CountersAggregatorExecutesProperly()
         {
             var storage = ConnectionUtils.CreateStorage();

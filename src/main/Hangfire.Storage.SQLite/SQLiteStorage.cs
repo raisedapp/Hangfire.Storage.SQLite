@@ -1,6 +1,8 @@
 ﻿using Hangfire.Server;
+using SQLite;
 using System;
 using System.Collections.Generic;
+using Hangfire.Logging;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -35,16 +37,29 @@ namespace Hangfire.Storage.SQLite
         /// <param name="databasePath">SQLite connection string</param>
         /// <param name="storageOptions">Storage options</param>
         public SQLiteStorage(string databasePath, SQLiteStorageOptions storageOptions)
+            : this(new SQLiteConnection(
+                    string.IsNullOrWhiteSpace(databasePath) ? throw new ArgumentNullException(nameof(databasePath)) : databasePath,
+                    SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex,
+                    storeDateTimeAsTicks: true
+                ), storageOptions)
         {
-            if (string.IsNullOrWhiteSpace(databasePath))
+        }
+
+        /// <summary>
+        /// Constructs Job Storage by database connection string and options
+        /// </summary>
+        /// <param name="dbConnection">SQLite connection</param>
+        /// <param name="storageOptions">Storage options</param>
+        public SQLiteStorage(SQLiteConnection dbConnection, SQLiteStorageOptions storageOptions)
+        {
+            if (dbConnection == null)
             {
-                throw new ArgumentNullException(nameof(databasePath));
+                throw new ArgumentNullException(nameof(dbConnection));
             }
 
-            _connectionString = databasePath;
             _storageOptions = storageOptions ?? throw new ArgumentNullException(nameof(storageOptions));
 
-            Connection = HangfireDbContext.Instance(databasePath, storageOptions.Prefix);
+            Connection = new HangfireDbContext(dbConnection, storageOptions.Prefix);
             Connection.Init(_storageOptions);
 
             var defaultQueueProvider = new SQLiteJobQueueProvider(_storageOptions);
@@ -67,9 +82,7 @@ namespace Hangfire.Storage.SQLite
         /// <returns>Database context</returns>
         public HangfireDbContext CreateAndOpenConnection()
         {
-            return _connectionString != null
-                ? HangfireDbContext.Instance(_connectionString, _storageOptions.Prefix)
-                : null;
+            return Connection;
         }
 
         /// <summary>

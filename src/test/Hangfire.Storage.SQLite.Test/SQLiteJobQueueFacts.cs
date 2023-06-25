@@ -7,7 +7,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class SQLiteJobQueueFacts
     {
         private static readonly string[] DefaultQueues = { "default" };
@@ -33,7 +32,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldThrowAnException_WhenQueuesCollectionIsNull()
         {
             UseConnection(connection =>
@@ -47,7 +46,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldThrowAnException_WhenQueuesCollectionIsEmpty()
         {
             UseConnection(connection =>
@@ -75,7 +74,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldWaitIndefinitely_WhenThereAreNoJobs()
         {
             UseConnection(connection =>
@@ -88,7 +87,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldFetchAJob_FromTheSpecifiedQueue()
         {
             // Arrange
@@ -113,7 +112,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldLeaveJobInTheQueue_ButSetItsFetchedAtValue()
         {
             // Arrange
@@ -149,7 +148,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldFetchATimedOutJobs_FromTheSpecifiedQueue()
         {
             // Arrange
@@ -181,7 +180,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldSetFetchedAt_OnlyForTheFetchedJob()
         {
             // Arrange
@@ -228,7 +227,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldFetchJobs_OnlyFromSpecifiedQueues()
         {
             UseConnection(connection =>
@@ -254,7 +253,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Dequeue_ShouldFetchJobs_FromMultipleQueuesBasedOnQueuePriority()
         {
             UseConnection(connection =>
@@ -305,7 +304,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Enqueue_AddsAJobToTheQueue()
         {
             UseConnection(connection =>
