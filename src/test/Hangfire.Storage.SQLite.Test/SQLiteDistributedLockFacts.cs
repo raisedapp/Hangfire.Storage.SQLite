@@ -7,7 +7,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class SQLiteDistributedLockFacts
     {
         [Fact]
@@ -31,7 +30,7 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal("database", exception.ParamName);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetLock_WhenResourceIsNotLocked()
         {
             UseConnection(database =>
@@ -46,7 +45,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetReleaseLock_WhenResourceIsNotLocked()
         {
             UseConnection(database =>
@@ -62,7 +61,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_AcquireLockWithinSameThread_WhenResourceIsLocked()
         {
             UseConnection(database =>
@@ -81,7 +80,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_ThrowsAnException_WhenResourceIsLocked()
         {
             UseConnection(database =>
@@ -102,7 +101,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_WaitForLock_SignaledAtLockRelease()
         {
             UseConnection(database =>
@@ -128,7 +127,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_WaitForLock_OnlySingleLockCanBeAcquired()
         {
             var connection = ConnectionUtils.CreateConnection();
@@ -184,7 +183,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetLockExpireAtWorks_WhenResourceIsNotLocked()
         {
             UseConnection(database =>
@@ -202,7 +201,7 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
         // see https://github.com/raisedapp/Hangfire.Storage.SQLite/issues/38
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetLockExpireAtWorks_WhenResourceIsLockedAndExpiring()
         {
             UseConnection(database =>

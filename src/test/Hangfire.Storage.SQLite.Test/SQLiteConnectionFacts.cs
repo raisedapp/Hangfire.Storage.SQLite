@@ -13,7 +13,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class HangfireSQLiteConnectionFacts
     {
         private readonly Mock<IPersistentJobQueue> _queue;
@@ -38,7 +37,7 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal("database", exception.ParamName);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_ThrowsAnException_WhenProvidersCollectionIsNull()
         {
             var exception = Assert.Throws<ArgumentNullException>(
@@ -47,7 +46,7 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal("queueProviders", exception.ParamName);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void FetchNextJob_DelegatesItsExecution_ToTheQueue()
         {
             UseConnection((database, connection) =>
@@ -61,7 +60,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void FetchNextJob_Throws_IfMultipleProvidersResolved()
         {
             UseConnection((database, connection) =>
@@ -75,7 +74,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void CreateWriteTransaction_ReturnsNonNullInstance()
         {
             UseConnection((database, connection) =>
@@ -85,7 +84,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AcquireLock_ReturnsNonNullInstance()
         {
             UseConnection((database, connection) =>
@@ -95,7 +94,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void CreateExpiredJob_ThrowsAnException_WhenJobIsNull()
         {
             UseConnection((database, connection) =>
@@ -111,7 +110,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void CreateExpiredJob_ThrowsAnException_WhenParametersCollectionIsNull()
         {
             UseConnection((database, connection) =>
@@ -127,7 +126,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void CreateExpiredJob_CreatesAJobInTheStorage_AndSetsItsParameters()
         {
             UseConnection((database, connection) =>
@@ -172,14 +171,14 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetJobData_ThrowsAnException_WhenJobIdIsNull()
         {
             UseConnection((database, connection) => Assert.Throws<ArgumentNullException>(
                     () => connection.GetJobData(null)));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetJobData_ReturnsNull_WhenThereIsNoSuchJob()
         {
             UseConnection((database, connection) =>
@@ -189,7 +188,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetJobData_ReturnsResult_WhenJobExists()
         {
             UseConnection((database, connection) =>
@@ -218,7 +217,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetStateData_ThrowsAnException_WhenJobIdIsNull()
         {
             UseConnection(
@@ -226,7 +225,7 @@ namespace Hangfire.Storage.SQLite.Test
                     () => connection.GetStateData(null)));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetStateData_ReturnsNull_IfThereIsNoSuchState()
         {
             UseConnection((database, connection) =>
@@ -236,7 +235,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetStateData_ReturnsCorrectData()
         {
             UseConnection((database, connection) =>
@@ -285,7 +284,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetJobData_ReturnsJobLoadException_IfThereWasADeserializationException()
         {
             UseConnection((database, connection) =>
@@ -307,7 +306,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetParameter_ThrowsAnException_WhenJobIdIsNull()
         {
             UseConnection((database, connection) =>
@@ -319,7 +318,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetParameter_ThrowsAnException_WhenNameIsNull()
         {
             UseConnection((database, connection) =>
@@ -331,7 +330,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetParameters_CreatesNewParameter_WhenParameterWithTheGivenNameDoesNotExists()
         {
             UseConnection((database, connection) =>
@@ -360,7 +359,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetParameter_UpdatesValue_WhenParameterWithTheGivenName_AlreadyExists()
         {
             UseConnection((database, connection) =>
@@ -389,7 +388,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetParameter_CanAcceptNulls_AsValues()
         {
             UseConnection((database, connection) =>
@@ -416,7 +415,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetParameter_ThrowsAnException_WhenJobIdIsNull()
         {
             UseConnection((database, connection) =>
@@ -428,7 +427,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetParameter_ThrowsAnException_WhenNameIsNull()
         {
             UseConnection((database, connection) =>
@@ -440,7 +439,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetParameter_ReturnsNull_WhenParameterDoesNotExists()
         {
             UseConnection((database, connection) =>
@@ -450,7 +449,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetParameter_ReturnsParameterValue_WhenJobExists()
         {
             UseConnection((database, connection) =>
@@ -472,7 +471,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetFirstByLowestScoreFromSet_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -484,14 +483,14 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetFirstByLowestScoreFromSet_ThrowsAnException_ToScoreIsLowerThanFromScore()
         {
             UseConnection((database, connection) => Assert.Throws<ArgumentException>(
                 () => connection.GetFirstByLowestScoreFromSet("key", 0, -1)));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetFirstByLowestScoreFromSet_ReturnsNull_WhenTheKeyDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -503,7 +502,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetFirstByLowestScoreFromSet_ReturnsTheValueWithTheLowestScore()
         {
             UseConnection((database, connection) =>
@@ -539,7 +538,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AnnounceServer_ThrowsAnException_WhenServerIdIsNull()
         {
             UseConnection((database, connection) =>
@@ -551,7 +550,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AnnounceServer_ThrowsAnException_WhenContextIsNull()
         {
             UseConnection((database, connection) =>
@@ -563,7 +562,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AnnounceServer_CreatesOrUpdatesARecord()
         {
             UseConnection((database, connection) =>
@@ -594,14 +593,14 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveServer_ThrowsAnException_WhenServerIdIsNull()
         {
             UseConnection((database, connection) => Assert.Throws<ArgumentNullException>(
                 () => connection.RemoveServer(null)));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveServer_RemovesAServerRecord()
         {
             UseConnection((database, connection) =>
@@ -626,21 +625,21 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Heartbeat_ThrowsBackgroundServerGoneException_WhenGivenServerDoesNotExist()
         {
             UseConnection((database, connection) => Assert.Throws<BackgroundServerGoneException>(
                 () => connection.Heartbeat(Guid.NewGuid().ToString())));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Heartbeat_ThrowsAnException_WhenServerIdIsNull()
         {
             UseConnection((database, connection) => Assert.Throws<ArgumentNullException>(
                 () => connection.Heartbeat(null)));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Heartbeat_UpdatesLastHeartbeat_OfTheServerWithGivenId()
         {
             UseConnection((database, connection) =>
@@ -668,14 +667,14 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveTimedOutServers_ThrowsAnException_WhenTimeOutIsNegative()
         {
             UseConnection((database, connection) => Assert.Throws<ArgumentException>(
                 () => connection.RemoveTimedOutServers(TimeSpan.FromMinutes(-5))));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveTimedOutServers_DoItsWorkPerfectly()
         {
             UseConnection((database, connection) =>
@@ -700,14 +699,14 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllItemsFromSet_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
                 Assert.Throws<ArgumentNullException>(() => connection.GetAllItemsFromSet(null)));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllItemsFromSet_ReturnsEmptyCollection_WhenKeyDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -719,7 +718,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllItemsFromSet_ReturnsAllItems_InCorrectOrder()
         {
             UseConnection((database, connection) =>
@@ -772,7 +771,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetRangeInHash_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -784,7 +783,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetRangeInHash_ThrowsAnException_WhenKeyValuePairsArgumentIsNull()
         {
             UseConnection((database, connection) =>
@@ -796,7 +795,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetRangeInHash_MergesAllRecords()
         {
             UseConnection((database, connection) =>
@@ -815,14 +814,14 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllEntriesFromHash_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
                 Assert.Throws<ArgumentNullException>(() => connection.GetAllEntriesFromHash(null)));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllEntriesFromHash_ReturnsNull_IfHashDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -832,7 +831,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllEntriesFromHash_ReturnsAllKeysAndTheirValues()
         {
             UseConnection((database, connection) =>
@@ -868,7 +867,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetSetCount_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -878,7 +877,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetSetCount_ReturnsZero_WhenSetDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -888,7 +887,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetSetCount_ReturnsNumberOfElements_InASet()
         {
             UseConnection((database, connection) =>
@@ -915,7 +914,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetRangeFromSet_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -924,7 +923,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetRangeFromSet_ReturnsPagedElementsInCorrectOrder()
         {
             UseConnection((database, connection) =>
@@ -977,7 +976,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetSetTtl_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -986,7 +985,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetSetTtl_ReturnsNegativeValue_WhenSetDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -996,7 +995,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetSetTtl_ReturnsExpirationTime_OfAGivenSet()
         {
             UseConnection((database, connection) =>
@@ -1027,7 +1026,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetCounter_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1037,7 +1036,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetCounter_ReturnsZero_WhenKeyDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1047,7 +1046,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetCounter_ReturnsSumOfValues_InCounterTable()
         {
             UseConnection((database, connection) =>
@@ -1077,7 +1076,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetCounter_IncludesValues_FromCounterAggregateTable()
         {
             UseConnection((database, connection) =>
@@ -1101,7 +1100,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetHashCount_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1110,7 +1109,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetHashCount_ReturnsZero_WhenKeyDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1120,7 +1119,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetHashCount_ReturnsNumber_OfHashFields()
         {
             UseConnection((database, connection) =>
@@ -1150,7 +1149,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetHashTtl_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1160,7 +1159,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetHashTtl_ReturnsNegativeValue_WhenHashDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1170,7 +1169,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetHashTtl_ReturnsExpirationTimeForHash()
         {
             UseConnection((database, connection) =>
@@ -1198,7 +1197,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetValueFromHash_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1210,7 +1209,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetValueFromHash_ThrowsAnException_WhenNameIsNull()
         {
             UseConnection((database, connection) =>
@@ -1222,7 +1221,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetValueFromHash_ReturnsNull_WhenHashDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1232,7 +1231,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetValueFromHash_ReturnsValue_OfAGivenField()
         {
             UseConnection((database, connection) =>
@@ -1265,7 +1264,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetListCount_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1275,7 +1274,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetListCount_ReturnsZero_WhenListDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1285,7 +1284,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetListCount_ReturnsTheNumberOfListElements()
         {
             UseConnection((database, connection) =>
@@ -1312,7 +1311,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetListTtl_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1322,7 +1321,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetListTtl_ReturnsNegativeValue_WhenListDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1332,7 +1331,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetListTtl_ReturnsExpirationTimeForList()
         {
             UseConnection((database, connection) =>
@@ -1358,7 +1357,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetRangeFromList_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1370,7 +1369,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetRangeFromList_ReturnsAnEmptyList_WhenListDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1380,7 +1379,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetRangeFromList_ReturnsAllEntries_WithinGivenBounds()
         {
             UseConnection((database, connection) =>
@@ -1420,7 +1419,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetRangeFromList_ReturnsAllEntriesInCorrectOrder()
         {
             UseConnection((database, connection) =>
@@ -1465,7 +1464,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllItemsFromList_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection((database, connection) =>
@@ -1475,7 +1474,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllItemsFromList_ReturnsAnEmptyList_WhenListDoesNotExist()
         {
             UseConnection((database, connection) =>
@@ -1485,7 +1484,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetAllItemsFromList_ReturnsAllItemsFromAGivenList_InCorrectOrder()
         {
             UseConnection((database, connection) =>
