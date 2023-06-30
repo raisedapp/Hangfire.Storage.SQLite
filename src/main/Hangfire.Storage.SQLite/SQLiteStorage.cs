@@ -11,6 +11,7 @@ namespace Hangfire.Storage.SQLite
         private readonly string _databasePath;
 
         private readonly SQLiteDbConnectionFactory _dbConnectionFactory;
+
         private readonly SQLiteStorageOptions _storageOptions;
         private ConcurrentQueue<PooledHangfireDbContext> _dbContextPool = new ConcurrentQueue<PooledHangfireDbContext>();
 
@@ -71,8 +72,7 @@ namespace Hangfire.Storage.SQLite
 
         public override IMonitoringApi GetMonitoringApi()
         {
-            var dbContext = CreateAndOpenConnection();
-            return new SQLiteMonitoringApi(dbContext, QueueProviders);
+            return new SQLiteMonitoringApi(this, QueueProviders);
         }
 
         /// <summary>
@@ -112,12 +112,14 @@ namespace Hangfire.Storage.SQLite
         }
 
         private bool _disposed;
+
         public void Dispose()
         {
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(SQLiteStorage));
             }
+
             foreach (var dbContext in _dbContextPool)
             {
                 dbContext.PhaseOut = true;

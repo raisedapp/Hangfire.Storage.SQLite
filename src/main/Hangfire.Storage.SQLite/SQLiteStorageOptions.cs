@@ -111,9 +111,9 @@ namespace Hangfire.Storage.SQLite
 
         /// <summary>
         /// Set journal_mode in SQLite.
-        /// Defaults to <see cref="JournalModes.DELETE"/>.
+        /// Defaults to <see cref="JournalModes.WAL"/>.
         /// </summary>
-        public JournalModes JournalMode { get; set; } = JournalModes.DELETE;
+        public JournalModes JournalMode { get; set; } = JournalModes.WAL;
 
         public enum JournalModes
         {
@@ -128,6 +128,6 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Limits the amount of pooled SQLiteConnections.
         /// </summary>
-        public int PoolSize { get; set; } = 10;
+        public int PoolSize { get; set; } = 20;
     }
 }
