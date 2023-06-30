@@ -53,7 +53,7 @@ namespace Hangfire.Storage.SQLite
         public SQLiteStorage(string databasePath, SQLiteStorageOptions storageOptions)
             : this(new SQLiteDbConnectionFactory(() => new SQLiteConnection(
                 string.IsNullOrWhiteSpace(databasePath) ? throw new ArgumentNullException(nameof(databasePath)) : databasePath,
-                SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex,
+                SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.NoMutex,
                 storeDateTimeAsTicks: true
             ) {BusyTimeout = TimeSpan.FromSeconds(10)}), storageOptions)
         {
