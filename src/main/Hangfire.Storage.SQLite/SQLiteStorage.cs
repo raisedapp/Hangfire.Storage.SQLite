@@ -6,9 +6,9 @@ using System.Collections.Generic;
 
 namespace Hangfire.Storage.SQLite
 {
-    public class SQLiteStorage : JobStorage
+    public class SQLiteStorage : JobStorage, IDisposable
     {
-        private readonly string _connectionString;
+        private readonly string _databasePath;
 
         private readonly SQLiteDbConnectionFactory _dbConnectionFactory;
         private readonly SQLiteStorageOptions _storageOptions;
@@ -57,6 +57,7 @@ namespace Hangfire.Storage.SQLite
 
             using (var dbContext = CreateAndOpenConnection())
             {
+                _databasePath = dbContext.Database.DatabasePath;
                 // Use this to initialize the database as soon as possible
                 // in case of error, the user will immediately get an exception at startup
             }
@@ -92,7 +93,7 @@ namespace Hangfire.Storage.SQLite
 
         private void EnqueueOrPhaseOut(PooledHangfireDbContext dbContext)
         {
-            if (_dbContextPool.Count < 10)
+            if (_dbContextPool.Count < _storageOptions.PoolSize)
             {
                 _dbContextPool.Enqueue(dbContext);
             }
@@ -107,7 +108,24 @@ namespace Hangfire.Storage.SQLite
         /// </summary>
         public override string ToString()
         {
-            return $"Connection string: {_connectionString},  prefix: {_storageOptions.Prefix}";
+            return $"Database path: {_databasePath},  prefix: {_storageOptions.Prefix}";
+        }
+
+        private bool _disposed;
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(SQLiteStorage));
+            }
+            foreach (var dbContext in _dbContextPool)
+            {
+                dbContext.PhaseOut = true;
+                dbContext.Dispose();
+            }
+
+            _dbContextPool = null;
+            _disposed = true;
         }
 
         /// <summary>

@@ -42,6 +42,7 @@ namespace Hangfire.Storage.SQLite
                 {
                     throw new ArgumentException(message, nameof(value));
                 }
+
                 if (value != value.Duration())
                 {
                     throw new ArgumentException(message, nameof(value));
@@ -65,6 +66,7 @@ namespace Hangfire.Storage.SQLite
                 {
                     throw new ArgumentException(message, nameof(value));
                 }
+
                 if (value != value.Duration())
                 {
                     throw new ArgumentException(message, nameof(value));
@@ -95,7 +97,8 @@ namespace Hangfire.Storage.SQLite
         public TimeSpan CountersAggregateInterval { get; set; }
 
         /// <summary>
-        /// Set AutoVacuum Mode In SQLite
+        /// Set AutoVacuum Mode In SQLite.
+        /// Defaults to <see cref="AutoVacuum.NONE"/>.
         /// </summary>
         public AutoVacuum AutoVacuumSelected { get; set; } = AutoVacuum.NONE;
 
@@ -106,6 +109,10 @@ namespace Hangfire.Storage.SQLite
             INCREMENTAL = 2
         }
 
+        /// <summary>
+        /// Set journal_mode in SQLite.
+        /// Defaults to <see cref="JournalModes.DELETE"/>.
+        /// </summary>
         public JournalModes JournalMode { get; set; } = JournalModes.DELETE;
 
         public enum JournalModes
@@ -117,5 +124,10 @@ namespace Hangfire.Storage.SQLite
             WAL,
             OFF
         }
+
+        /// <summary>
+        /// Limits the amount of pooled SQLiteConnections.
+        /// </summary>
+        public int PoolSize { get; set; } = 10;
     }
 }
