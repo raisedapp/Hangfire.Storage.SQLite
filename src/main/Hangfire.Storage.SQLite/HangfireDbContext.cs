@@ -144,7 +144,6 @@ namespace Hangfire.Storage.SQLite
                 Database?.Dispose();
                 Database = null;
             }
-            GC.SuppressFinalize(this);
         }
         
         public void Dispose()
