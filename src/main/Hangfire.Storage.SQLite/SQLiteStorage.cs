@@ -3,33 +3,16 @@ using SQLite;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
-using Hangfire.Logging;
-using Hangfire.Storage.SQLite.Entities;
 
 namespace Hangfire.Storage.SQLite
 {
-    public class SQLiteDbConnectionFactory
-    {
-        private readonly Func<SQLiteConnection> _getConnection;
-
-        public SQLiteDbConnectionFactory(Func<SQLiteConnection> getConnection)
-        {
-            _getConnection = getConnection;
-        }
-
-        public SQLiteConnection Create()
-        {
-            return _getConnection();
-        }
-    }
-
     public class SQLiteStorage : JobStorage
     {
         private readonly string _connectionString;
 
         private readonly SQLiteDbConnectionFactory _dbConnectionFactory;
         private readonly SQLiteStorageOptions _storageOptions;
+        private ConcurrentQueue<PooledHangfireDbContext> _dbContextPool = new ConcurrentQueue<PooledHangfireDbContext>();
 
         /// <summary>
         /// Queue providers collection
@@ -91,8 +74,6 @@ namespace Hangfire.Storage.SQLite
             return new SQLiteMonitoringApi(dbContext, QueueProviders);
         }
 
-        private readonly ConcurrentQueue<PooledHangfireDbContext> _dbContextPool = new ConcurrentQueue<PooledHangfireDbContext>();
-
         /// <summary>
         /// Opens connection to database
         /// </summary>
@@ -104,9 +85,21 @@ namespace Hangfire.Storage.SQLite
                 return dbContext;
             }
 
-            dbContext = new PooledHangfireDbContext(_dbConnectionFactory.Create(), ctx => _dbContextPool.Enqueue(ctx), _storageOptions.Prefix);
+            dbContext = new PooledHangfireDbContext(_dbConnectionFactory.Create(), ctx => EnqueueOrPhaseOut(ctx), _storageOptions.Prefix);
             dbContext.Init(_storageOptions);
             return dbContext;
+        }
+
+        private void EnqueueOrPhaseOut(PooledHangfireDbContext dbContext)
+        {
+            if (_dbContextPool.Count < 10)
+            {
+                _dbContextPool.Enqueue(dbContext);
+            }
+            else
+            {
+                dbContext.PhaseOut = true;
+            }
         }
 
         /// <summary>

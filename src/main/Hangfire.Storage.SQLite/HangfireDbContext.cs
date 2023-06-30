@@ -7,28 +7,6 @@ using System.Threading;
 
 namespace Hangfire.Storage.SQLite
 {
-    internal class PooledHangfireDbContext : HangfireDbContext
-    {
-        private readonly Action<PooledHangfireDbContext> _onDispose;
-        public bool PhaseOut { get; set; }
-
-        internal PooledHangfireDbContext(SQLiteConnection connection, Action<PooledHangfireDbContext> onDispose, string prefix = "hangfire") 
-            : base(connection, prefix)
-        {
-            _onDispose = onDispose;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (PhaseOut)
-            {
-                base.Dispose(disposing);
-                return;
-            }
-            _onDispose(this);
-        }
-    }
-    
     /// <summary>
     /// Represents SQLite database context for Hangfire
     /// </summary>
