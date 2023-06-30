@@ -333,7 +333,7 @@ namespace Hangfire.Storage.SQLite.Test
 
         private static void UseConnection(Action<HangfireDbContext> action)
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = ConnectionUtils.CreateConnection();
             action(connection);
         }
     }

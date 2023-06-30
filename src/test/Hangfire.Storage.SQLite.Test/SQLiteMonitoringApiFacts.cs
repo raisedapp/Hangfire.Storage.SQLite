@@ -282,7 +282,7 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseMonitoringApi(Action<HangfireDbContext, SQLiteMonitoringApi> action)
         {
-            var database = ConnectionUtils.CreateConnection();
+            using var database = ConnectionUtils.CreateConnection();
             var connection = new SQLiteMonitoringApi(database, _providers);
             action(database, connection);
         }

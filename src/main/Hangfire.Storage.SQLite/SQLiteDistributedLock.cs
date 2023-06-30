@@ -162,11 +162,11 @@ namespace Hangfire.Storage.SQLite
             }
             catch (DistributedLockTimeoutException ex)
             {
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -185,7 +185,7 @@ namespace Hangfire.Storage.SQLite
             }
             catch (Exception ex)
             {
-                throw ex;
+                throw;
             }
         }
 
