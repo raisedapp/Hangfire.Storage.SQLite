@@ -3,6 +3,7 @@ using SQLite;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Hangfire.Storage.SQLite
 {
@@ -66,12 +67,14 @@ namespace Hangfire.Storage.SQLite
 
         public override IStorageConnection GetConnection()
         {
+            CheckDisposed();
             var dbContext = CreateAndOpenConnection();
             return new HangfireSQLiteConnection(dbContext, _storageOptions, QueueProviders);
         }
 
         public override IMonitoringApi GetMonitoringApi()
         {
+            CheckDisposed();
             return new SQLiteMonitoringApi(this, QueueProviders);
         }
 
@@ -81,6 +84,7 @@ namespace Hangfire.Storage.SQLite
         /// <returns>Database context</returns>
         public HangfireDbContext CreateAndOpenConnection()
         {
+            CheckDisposed();
             if (_dbContextPool.TryDequeue(out var dbContext))
             {
                 return dbContext;
@@ -93,6 +97,12 @@ namespace Hangfire.Storage.SQLite
 
         private void EnqueueOrPhaseOut(PooledHangfireDbContext dbContext)
         {
+            if (_disposed)
+            {
+                dbContext.PhaseOut = true;
+                return;
+            }
+
             if (_dbContextPool.Count < _storageOptions.PoolSize)
             {
                 _dbContextPool.Enqueue(dbContext);
@@ -117,7 +127,7 @@ namespace Hangfire.Storage.SQLite
         {
             if (_disposed)
             {
-                throw new ObjectDisposedException(nameof(SQLiteStorage));
+                return;
             }
 
             foreach (var dbContext in _dbContextPool)
@@ -128,6 +138,22 @@ namespace Hangfire.Storage.SQLite
 
             _dbContextPool = null;
             _disposed = true;
+        }
+
+        private void CheckDisposed()
+        {
+            if (_disposed)
+            {
+                // This pattern is used to keep the IL-small and the cost for CheckDisposed low
+                // by not having a throw new... statement inside the check function itself
+                ThrowObjectDisposedException();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowObjectDisposedException()
+        {
+            throw new ObjectDisposedException(nameof(SQLiteStorage));
         }
 
         /// <summary>
