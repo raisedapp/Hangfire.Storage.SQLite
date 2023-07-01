@@ -1525,11 +1525,9 @@ namespace Hangfire.Storage.SQLite.Test
         }
         private void UseConnection(Action<HangfireDbContext, HangfireSQLiteConnection> action)
         {
-            var database = ConnectionUtils.CreateConnection();
-            using (var connection = new HangfireSQLiteConnection(database, _providers))
-            {
-                action(database, connection);
-            }
+            using var database = ConnectionUtils.CreateConnection();
+            using var connection = new HangfireSQLiteConnection(database, _providers);
+            action(database, connection);
         }
 
         public static void SampleMethod(string arg)

@@ -330,7 +330,7 @@ namespace Hangfire.Storage.SQLite
                     {
                         _.Database.Rollback();
                         
-                        throw ex;
+                        throw;
                     }
                 }
             });        

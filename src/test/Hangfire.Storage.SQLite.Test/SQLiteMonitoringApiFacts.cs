@@ -282,9 +282,10 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseMonitoringApi(Action<HangfireDbContext, SQLiteMonitoringApi> action)
         {
-            var database = ConnectionUtils.CreateConnection();
-            var connection = new SQLiteMonitoringApi(database, _providers);
-            action(database, connection);
+            using var storage = ConnectionUtils.CreateStorage();
+            var connection = new SQLiteMonitoringApi(storage, _providers);
+            using var dbContext = storage.CreateAndOpenConnection();
+            action(dbContext, connection);
         }
 
         private HangfireJob CreateJobInState(HangfireDbContext database, string stateName, Func<HangfireJob, HangfireJob> visitor = null)

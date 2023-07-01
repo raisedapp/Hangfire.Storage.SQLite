@@ -911,7 +911,7 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseConnection(Action<HangfireDbContext> action)
         {
-            HangfireDbContext connection = ConnectionUtils.CreateConnection();
+            using var connection = ConnectionUtils.CreateConnection();
             action(connection);
         }
 

@@ -38,6 +38,12 @@ namespace Hangfire.Storage.SQLite
             _queueProviders = queueProviders ?? throw new ArgumentNullException(nameof(queueProviders));
         }
 
+        public override void Dispose()
+        {
+            DbContext.Dispose();
+            base.Dispose();
+        }
+
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
             return new SQLiteDistributedLock($"HangFire:{resource}", timeout, DbContext, _storageOptions);
