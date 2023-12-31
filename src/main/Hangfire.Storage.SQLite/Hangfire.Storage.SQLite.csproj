@@ -2,6 +2,7 @@
 
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFramework>netstandard2.0</TargetFramework>
+    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
@@ -32,8 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Hangfire.Core" Version="1.8.0" />
-    <PackageReference Condition="'$(TargetFramework)' == 'net45'" Include="sqlite-net-pcl" Version="1.6.292" />
-    <PackageReference Condition="'$(TargetFramework)' != 'net45'" Include="sqlite-net-pcl" Version="1.8.116" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
   </ItemGroup>
 
 </Project>

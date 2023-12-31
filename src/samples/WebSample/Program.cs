@@ -15,8 +15,7 @@ services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UseSQLiteStorage("Hangfire.db",
-        new SQLiteStorageOptions() { AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL, JobExpirationCheckInterval = TimeSpan.FromSeconds(30) })
+    .UseSQLiteStorage("Hangfire.db")
     .UseHeartbeatPage(checkInterval: TimeSpan.FromSeconds(10))
     .UseJobsLogger());
 services.AddHangfireServer();
