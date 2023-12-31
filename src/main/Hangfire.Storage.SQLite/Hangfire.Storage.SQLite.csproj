@@ -2,7 +2,6 @@
 
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFramework>netstandard2.0</TargetFramework>
-    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
@@ -22,7 +21,6 @@
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
       0.4.0
-      -
     </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
