@@ -326,7 +326,7 @@ namespace Hangfire.Storage.SQLite
 
                         _.Database.Commit();
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         _.Database.Rollback();
                         

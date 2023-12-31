@@ -38,15 +38,6 @@ namespace Hangfire.Storage.SQLite
         /// <param name="prefix">Table prefix</param>
         internal HangfireDbContext(SQLiteConnection connection, string prefix = "hangfire")
         {
-            //UTC - Internal JSON
-            GlobalConfiguration.Configuration
-                .UseSerializerSettings(new JsonSerializerSettings()
-                {
-                    DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                    DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                    DateFormatString = "yyyy-MM-dd HH:mm:ss.fff"
-                });
-
             Database = connection;
 
             ConnectionId = Guid.NewGuid().ToString();

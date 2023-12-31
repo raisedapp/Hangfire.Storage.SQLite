@@ -160,11 +160,11 @@ namespace Hangfire.Storage.SQLite
                     throw new DistributedLockTimeoutException(_resource);
                 }
             }
-            catch (DistributedLockTimeoutException ex)
+            catch (DistributedLockTimeoutException)
             {
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -183,7 +183,7 @@ namespace Hangfire.Storage.SQLite
                 lock (EventWaitHandleName)
                     Monitor.Pulse(EventWaitHandleName);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
