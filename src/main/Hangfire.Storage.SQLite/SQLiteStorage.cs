@@ -75,7 +75,7 @@ namespace Hangfire.Storage.SQLite
         public override IMonitoringApi GetMonitoringApi()
         {
             CheckDisposed();
-            return new SQLiteMonitoringApi(this, QueueProviders);
+            return new SQLiteMonitoringApi(CreateAndOpenConnection(), QueueProviders);
         }
 
         /// <summary>

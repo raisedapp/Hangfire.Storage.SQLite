@@ -160,13 +160,13 @@ namespace Hangfire.Storage.SQLite
                     throw new DistributedLockTimeoutException(_resource);
                 }
             }
-            catch (DistributedLockTimeoutException)
+            catch (DistributedLockTimeoutException ex)
             {
-                throw;
+                throw ex;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw ex;
             }
         }
 
@@ -176,26 +176,31 @@ namespace Hangfire.Storage.SQLite
         /// <exception cref="DistributedLockTimeoutException"></exception>
         private void Release()
         {
-            try
-            {
+            // DANIEL WAS HERE:
+            Retry.Twice((retry) => {
+
                 // Remove resource lock (if it's still ours)
                 _dbContext.DistributedLockRepository.Delete(_ => _.Resource == _resource && _.ResourceKey == _resourceKey);
                 lock (EventWaitHandleName)
                     Monitor.Pulse(EventWaitHandleName);
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
+             );
         }
+
 
         private void Cleanup()
         {
             try
             {
-                // Delete expired locks (of any owner)
-                _dbContext.DistributedLockRepository.
-                    Delete(x => x.Resource == _resource && x.ExpireAt < DateTime.UtcNow);
+                // DANIEL WAS HERE:
+                Retry.Twice((_) => {
+
+                    // Delete expired locks (of any owner)
+                    _dbContext.DistributedLockRepository.
+                       Delete(x => x.Resource == _resource && x.ExpireAt < DateTime.UtcNow);
+                }
+                );
             }
             catch (Exception ex)
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Hangfire.Common;
 using Hangfire.States;
 using Hangfire.Storage.Monitoring;
@@ -11,28 +12,25 @@ namespace Hangfire.Storage.SQLite
 {
     public class SQLiteMonitoringApi : IMonitoringApi
     {
-        private readonly SQLiteStorage _storage;
+        private readonly HangfireDbContext _dbContext;
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="storage"></param>
+        /// <param name="database"></param>
         /// <param name="queueProviders"></param>
-        public SQLiteMonitoringApi(SQLiteStorage storage, PersistentJobQueueProviderCollection queueProviders)
+        public SQLiteMonitoringApi(HangfireDbContext database, PersistentJobQueueProviderCollection queueProviders)
         {
-            _storage = storage;
+            _dbContext = database;
             _queueProviders = queueProviders;
         }
 
         private T UseConnection<T>(Func<HangfireDbContext, T> action)
         {
-            using (var dbContext = _storage.CreateAndOpenConnection())
-            {
-                var result = action(dbContext);
-                return result;
-            }
+            var result = action(_dbContext);
+            return result;
         }
 
         private JobList<TDto> GetJobs<TDto>(HangfireDbContext connection, int from, int count, string stateName, Func<JobDetailedDto, Job, Dictionary<string, string>, TDto> selector)
@@ -194,7 +192,7 @@ namespace Hangfire.Storage.SQLite
             var result = new Dictionary<DateTime, long>();
             for (var i = 0; i < stringDates.Count; i++)
             {
-                var value = valuesAggregatorMap[$"stats:{type}:{stringDates[i]}"];
+                var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
                 result.Add(dates[i], value.ToInt64());
             }
 
@@ -227,7 +225,7 @@ namespace Hangfire.Storage.SQLite
             var result = new Dictionary<DateTime, long>();
             for (var i = 0; i < dates.Count; i++)
             {
-                var value = valuesAggregatorMap[$"stats:{type}:{dates[i]:yyyy-MM-dd-HH}"];
+                var value = valuesAggregatorMap[valuesAggregatorMap.Keys.ElementAt(i)];
                 result.Add(dates[i], value.ToInt64());
             }
 
@@ -416,26 +414,29 @@ namespace Hangfire.Storage.SQLite
         /// <returns></returns>
         public StatisticsDto GetStatistics()
         {
-            return UseConnection(ctx =>
-            {
-                var stats = new StatisticsDto();
+            // DANIEL WAS HERE:
+            return Retry.Twice((attempts) =>
 
-                int GetCountIfExists(string name) => ctx.HangfireJobRepository.Count(_ => _.StateName == name);
+                UseConnection(ctx =>
+                {
+                    var stats = new StatisticsDto();
 
-                stats.Enqueued = GetCountIfExists(EnqueuedState.StateName);
-                stats.Failed = GetCountIfExists(FailedState.StateName);
-                stats.Processing = GetCountIfExists(ProcessingState.StateName);
-                stats.Scheduled = GetCountIfExists(ScheduledState.StateName);
-                stats.Servers = ctx.HangfireServerRepository.Count();
-                stats.Succeeded = GetCountIfExists(SucceededState.StateName);
-                stats.Deleted = GetCountIfExists(DeletedState.StateName);
-                stats.Recurring = ctx.SetRepository.Count(_ => _.Key == "recurring-jobs");
-                stats.Queues = _queueProviders
-                    .SelectMany(x => x.GetJobQueueMonitoringApi(ctx).GetQueues())
-                    .Count();
+                    int GetCountIfExists(string name) => ctx.HangfireJobRepository.Count(_ => _.StateName == name);
 
-                return stats;
-            });
+                    stats.Enqueued = GetCountIfExists(EnqueuedState.StateName);
+                    stats.Failed = GetCountIfExists(FailedState.StateName);
+                    stats.Processing = GetCountIfExists(ProcessingState.StateName);
+                    stats.Scheduled = GetCountIfExists(ScheduledState.StateName);
+                    stats.Servers = ctx.HangfireServerRepository.Count();
+                    stats.Succeeded = GetCountIfExists(SucceededState.StateName);
+                    stats.Deleted = GetCountIfExists(DeletedState.StateName);
+                    stats.Recurring = ctx.SetRepository.Count(_ => _.Key == "recurring-jobs");
+                    stats.Queues = _queueProviders
+                        .SelectMany(x => x.GetJobQueueMonitoringApi(ctx).GetQueues())
+                        .Count();
+
+                    return stats;
+                }));
         }
 
         /// <summary>
@@ -470,19 +471,19 @@ namespace Hangfire.Storage.SQLite
                 var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
                 var jobHistory = _.StateRepository.Where(x => x.JobId == iJobId).ToList();
                 var jobParameters =
-                _.JobParameterRepository
-                .Where(x => x.JobId == iJobId)
-                .GroupBy(x => x.Name, x => new { x.Value, x.Id }, (name, val) => new
-                {
-                    Name = name,
-                    Value = val
+                    _.JobParameterRepository
+                    .Where(x => x.JobId == iJobId)
+                    .GroupBy(x => x.Name, x => new { x.Value, x.Id }, (name, val) => new
+                    {
+                        Name = name,
+                        Value = val
                                 .OrderByDescending(x => x.Id)
                                 .FirstOrDefault()
                                 .Value
 
-                })
-                .ToList()
-                .ToDictionary(x => x.Name, x => x.Value);
+                    })
+                    .ToList()
+                    .ToDictionary(x => x.Name, x => x.Value);
 
                 if (job == null)
                     return null;
