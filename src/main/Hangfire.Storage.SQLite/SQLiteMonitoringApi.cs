@@ -12,25 +12,28 @@ namespace Hangfire.Storage.SQLite
 {
     public class SQLiteMonitoringApi : IMonitoringApi
     {
-        private readonly HangfireDbContext _dbContext;
+        private readonly SQLiteStorage _storage;
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="database"></param>
+        /// <param name="storage"></param>
         /// <param name="queueProviders"></param>
-        public SQLiteMonitoringApi(HangfireDbContext database, PersistentJobQueueProviderCollection queueProviders)
+        public SQLiteMonitoringApi(SQLiteStorage storage, PersistentJobQueueProviderCollection queueProviders)
         {
-            _dbContext = database;
+            _storage = storage;
             _queueProviders = queueProviders;
         }
 
         private T UseConnection<T>(Func<HangfireDbContext, T> action)
         {
-            var result = action(_dbContext);
-            return result;
+            using (var dbContext = _storage.CreateAndOpenConnection())
+            {
+                var result = action(dbContext);
+                return result;
+            }
         }
 
         private JobList<TDto> GetJobs<TDto>(HangfireDbContext connection, int from, int count, string stateName, Func<JobDetailedDto, Job, Dictionary<string, string>, TDto> selector)
@@ -414,7 +417,6 @@ namespace Hangfire.Storage.SQLite
         /// <returns></returns>
         public StatisticsDto GetStatistics()
         {
-            // DANIEL WAS HERE:
             return Retry.Twice((attempts) =>
 
                 UseConnection(ctx =>

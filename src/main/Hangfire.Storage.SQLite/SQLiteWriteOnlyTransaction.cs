@@ -113,7 +113,6 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            // DANIEL WAS HERE
             Retry.Twice((attempts) => {
 
                 lock (_lockObject)
