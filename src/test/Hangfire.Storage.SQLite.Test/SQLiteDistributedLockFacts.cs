@@ -7,7 +7,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class SQLiteDistributedLockFacts
     {
         [Fact]
@@ -31,7 +30,7 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal("database", exception.ParamName);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetLock_WhenResourceIsNotLocked()
         {
             UseConnection(database =>
@@ -46,7 +45,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetReleaseLock_WhenResourceIsNotLocked()
         {
             UseConnection(database =>
@@ -62,7 +61,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_AcquireLockWithinSameThread_WhenResourceIsLocked()
         {
             UseConnection(database =>
@@ -81,7 +80,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_ThrowsAnException_WhenResourceIsLocked()
         {
             UseConnection(database =>
@@ -102,22 +101,28 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_WaitForLock_SignaledAtLockRelease()
         {
-            UseConnection(database =>
+            var storage = ConnectionUtils.CreateStorage();
+            using var mre = new ManualResetEventSlim();
+            var t = new Thread(() =>
             {
-                var t = new Thread(() =>
+                UseConnection(database =>
                 {
                     using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                     {
+                        mre.Set();
                         Thread.Sleep(TimeSpan.FromSeconds(3));
                     }
-                });
+                }, storage);
+            });
+            UseConnection(database =>
+            {
                 t.Start();
 
                 // Wait just a bit to make sure the above lock is acuired
-                Thread.Sleep(TimeSpan.FromSeconds(1));
+                mre.Wait(TimeSpan.FromSeconds(5));
 
                 // Record when we try to aquire the lock
                 var startTime = DateTime.UtcNow;
@@ -125,21 +130,22 @@ namespace Hangfire.Storage.SQLite.Test
                 {
                     Assert.InRange(DateTime.UtcNow - startTime, TimeSpan.Zero, TimeSpan.FromSeconds(5));
                 }
-            });
+            }, storage);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_WaitForLock_OnlySingleLockCanBeAcquired()
         {
-            var connection = ConnectionUtils.CreateConnection();
             var numThreads = 10;
             long concurrencyCounter = 0;
-            var manualResetEvent = new ManualResetEventSlim();
+            using var manualResetEvent = new ManualResetEventSlim();
             var success = new bool[numThreads];
-
+            var storage = ConnectionUtils.CreateStorage();
+            
             // Spawn multiple threads to race each other.
             var threads = Enumerable.Range(0, numThreads).Select(i => new Thread(() =>
             {
+                using var connection = storage.CreateAndOpenConnection();
                 // Wait for the start signal.
                 manualResetEvent.Wait();
 
@@ -184,7 +190,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetLockExpireAtWorks_WhenResourceIsNotLocked()
         {
             UseConnection(database =>
@@ -202,7 +208,7 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
         // see https://github.com/raisedapp/Hangfire.Storage.SQLite/issues/38
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_SetLockExpireAtWorks_WhenResourceIsLockedAndExpiring()
         {
             UseConnection(database =>
@@ -225,9 +231,9 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        private static void UseConnection(Action<HangfireDbContext> action)
+        private static void UseConnection(Action<HangfireDbContext> action, SQLiteStorage storage = null)
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = storage?.CreateAndOpenConnection() ?? ConnectionUtils.CreateConnection();
             action(connection);
         }
     }

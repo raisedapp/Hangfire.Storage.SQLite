@@ -1,19 +1,20 @@
 ﻿using Hangfire.Server;
+using SQLite;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Hangfire.Storage.SQLite
 {
-    public class SQLiteStorage : JobStorage
+    public class SQLiteStorage : JobStorage, IDisposable
     {
-        private readonly string _connectionString;
+        private readonly string _databasePath;
+
+        private readonly SQLiteDbConnectionFactory _dbConnectionFactory;
 
         private readonly SQLiteStorageOptions _storageOptions;
-
-        /// <summary>
-        /// Database context
-        /// </summary>
-        public HangfireDbContext Connection { get; }
+        private ConcurrentQueue<PooledHangfireDbContext> _dbContextPool = new ConcurrentQueue<PooledHangfireDbContext>();
 
         /// <summary>
         /// Queue providers collection
@@ -35,30 +36,46 @@ namespace Hangfire.Storage.SQLite
         /// <param name="databasePath">SQLite connection string</param>
         /// <param name="storageOptions">Storage options</param>
         public SQLiteStorage(string databasePath, SQLiteStorageOptions storageOptions)
+            : this(new SQLiteDbConnectionFactory(() => new SQLiteConnection(
+                string.IsNullOrWhiteSpace(databasePath) ? throw new ArgumentNullException(nameof(databasePath)) : databasePath,
+                SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.NoMutex,
+                storeDateTimeAsTicks: true
+            ) {BusyTimeout = TimeSpan.FromSeconds(10)}), storageOptions)
         {
-            if (string.IsNullOrWhiteSpace(databasePath))
-            {
-                throw new ArgumentNullException(nameof(databasePath));
-            }
+        }
 
-            _connectionString = databasePath;
+        /// <summary>
+        /// Constructs Job Storage by database connection string and options
+        /// </summary>
+        /// <param name="dbConnectionFactory">Factory that creates SQLite connections</param>
+        /// <param name="storageOptions">Storage options</param>
+        public SQLiteStorage(SQLiteDbConnectionFactory dbConnectionFactory, SQLiteStorageOptions storageOptions)
+        {
+            _dbConnectionFactory = dbConnectionFactory ?? throw new ArgumentNullException(nameof(dbConnectionFactory));
             _storageOptions = storageOptions ?? throw new ArgumentNullException(nameof(storageOptions));
-
-            Connection = HangfireDbContext.Instance(databasePath, storageOptions.Prefix);
-            Connection.Init(_storageOptions);
 
             var defaultQueueProvider = new SQLiteJobQueueProvider(_storageOptions);
             QueueProviders = new PersistentJobQueueProviderCollection(defaultQueueProvider);
+
+            using (var dbContext = CreateAndOpenConnection())
+            {
+                _databasePath = dbContext.Database.DatabasePath;
+                // Use this to initialize the database as soon as possible
+                // in case of error, the user will immediately get an exception at startup
+            }
         }
 
         public override IStorageConnection GetConnection()
         {
-            return new HangfireSQLiteConnection(Connection, _storageOptions, QueueProviders);
+            CheckDisposed();
+            var dbContext = CreateAndOpenConnection();
+            return new HangfireSQLiteConnection(dbContext, _storageOptions, QueueProviders);
         }
 
         public override IMonitoringApi GetMonitoringApi()
         {
-            return new SQLiteMonitoringApi(Connection, QueueProviders);
+            CheckDisposed();
+            return new SQLiteMonitoringApi(this, QueueProviders);
         }
 
         /// <summary>
@@ -67,9 +84,33 @@ namespace Hangfire.Storage.SQLite
         /// <returns>Database context</returns>
         public HangfireDbContext CreateAndOpenConnection()
         {
-            return _connectionString != null
-                ? HangfireDbContext.Instance(_connectionString, _storageOptions.Prefix)
-                : null;
+            CheckDisposed();
+            if (_dbContextPool.TryDequeue(out var dbContext))
+            {
+                return dbContext;
+            }
+
+            dbContext = new PooledHangfireDbContext(_dbConnectionFactory.Create(), ctx => EnqueueOrPhaseOut(ctx), _storageOptions.Prefix);
+            dbContext.Init(_storageOptions);
+            return dbContext;
+        }
+
+        private void EnqueueOrPhaseOut(PooledHangfireDbContext dbContext)
+        {
+            if (_disposed)
+            {
+                dbContext.PhaseOut = true;
+                return;
+            }
+
+            if (_dbContextPool.Count < _storageOptions.PoolSize)
+            {
+                _dbContextPool.Enqueue(dbContext);
+            }
+            else
+            {
+                dbContext.PhaseOut = true;
+            }
         }
 
         /// <summary>
@@ -77,7 +118,42 @@ namespace Hangfire.Storage.SQLite
         /// </summary>
         public override string ToString()
         {
-            return $"Connection string: {_connectionString},  prefix: {_storageOptions.Prefix}";
+            return $"Database path: {_databasePath},  prefix: {_storageOptions.Prefix}";
+        }
+
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            foreach (var dbContext in _dbContextPool)
+            {
+                dbContext.PhaseOut = true;
+                dbContext.Dispose();
+            }
+
+            _dbContextPool = null;
+            _disposed = true;
+        }
+
+        private void CheckDisposed()
+        {
+            if (_disposed)
+            {
+                // This pattern is used to keep the IL-small and the cost for CheckDisposed low
+                // by not having a throw new... statement inside the check function itself
+                ThrowObjectDisposedException();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowObjectDisposedException()
+        {
+            throw new ObjectDisposedException(nameof(SQLiteStorage));
         }
 
         /// <summary>

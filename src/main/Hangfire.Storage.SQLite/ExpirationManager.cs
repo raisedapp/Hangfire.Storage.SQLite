@@ -76,20 +76,22 @@ namespace Hangfire.Storage.SQLite
         /// <param name="cancellationToken">Cancellation token</param>
         public void Execute(CancellationToken cancellationToken)
         {
-            HangfireDbContext connection = _storage.CreateAndOpenConnection();
-            var storageConnection = connection.StorageOptions;
-
-            foreach (var table in ProcessedTables)
+            using (HangfireDbContext connection = _storage.CreateAndOpenConnection())
             {
-                Logger.Info($"Removing outdated records from the '{table}' table...");
+                var storageConnection = connection.StorageOptions;
 
-                int affected;
-                do
+                foreach (var table in ProcessedTables)
                 {
-                    affected = RemoveExpireRows(connection, table);
-                } while (affected == NumberOfRecordsInSinglePass);
+                    Logger.Info($"Removing outdated records from the '{table}' table...");
 
-                Logger.Info($"Outdated records removed from the '{table}' table...");
+                    int affected;
+                    do
+                    {
+                        affected = RemoveExpireRows(connection, table);
+                    } while (affected == NumberOfRecordsInSinglePass);
+
+                    Logger.Info($"Outdated records removed from the '{table}' table...");
+                }
             }
 
             cancellationToken.WaitHandle.WaitOne(_checkInterval);

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29424.173
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32602.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.Storage.SQLite", "src\main\Hangfire.Storage.SQLite\Hangfire.Storage.SQLite.csproj", "{27A56CA6-6B11-4D43-8BF8-F9AF5907556C}"
 EndProject
@@ -14,9 +14,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSample", "src\samples\ConsoleSample\ConsoleSample.csproj", "{453B460B-6643-4EBC-A046-3BDA69EFF2CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSample", "src\samples\WebSample\WebSample.csproj", "{7170DD33-D6CA-40A5-AA03-D96DE74BA353}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSample", "src\samples\WebSample\WebSample.csproj", "{1ABCB458-08C4-4132-8295-A5A605F6B75F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSample", "src\samples\ConsoleSample\ConsoleSample.csproj", "{C2137C38-9AE6-4200-9F97-E3DA5A2DC741}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,14 +32,14 @@ Global
 		{279C04FC-22EB-438C-9BF7-2CBA306025F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{279C04FC-22EB-438C-9BF7-2CBA306025F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{279C04FC-22EB-438C-9BF7-2CBA306025F7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{453B460B-6643-4EBC-A046-3BDA69EFF2CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{453B460B-6643-4EBC-A046-3BDA69EFF2CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{453B460B-6643-4EBC-A046-3BDA69EFF2CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{453B460B-6643-4EBC-A046-3BDA69EFF2CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1ABCB458-08C4-4132-8295-A5A605F6B75F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1ABCB458-08C4-4132-8295-A5A605F6B75F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1ABCB458-08C4-4132-8295-A5A605F6B75F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1ABCB458-08C4-4132-8295-A5A605F6B75F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7170DD33-D6CA-40A5-AA03-D96DE74BA353}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7170DD33-D6CA-40A5-AA03-D96DE74BA353}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7170DD33-D6CA-40A5-AA03-D96DE74BA353}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7170DD33-D6CA-40A5-AA03-D96DE74BA353}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2137C38-9AE6-4200-9F97-E3DA5A2DC741}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2137C38-9AE6-4200-9F97-E3DA5A2DC741}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2137C38-9AE6-4200-9F97-E3DA5A2DC741}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2137C38-9AE6-4200-9F97-E3DA5A2DC741}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

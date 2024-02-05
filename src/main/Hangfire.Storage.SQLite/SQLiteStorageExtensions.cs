@@ -47,5 +47,27 @@ namespace Hangfire.Storage.SQLite
             
             return configuration.UseStorage(storage);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="connectionFactory">connection factory to use</param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static IGlobalConfiguration<SQLiteStorage> UseSQLiteStorage(
+            [NotNull] this IGlobalConfiguration configuration,
+            [NotNull] SQLiteDbConnectionFactory connectionFactory,
+            SQLiteStorageOptions options = null)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
+            if (options == null) options = new SQLiteStorageOptions();
+
+            var storage = new SQLiteStorage(connectionFactory, options);
+
+            return configuration.UseStorage(storage);
+        }
     }
 }

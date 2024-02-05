@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class SQLiteWriteOnlyTransactionFacts
     {
         private readonly PersistentJobQueueProviderCollection _queueProviders;
@@ -32,7 +31,7 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal("connection", exception.ParamName);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Ctor_ThrowsAnException_IfProvidersCollectionIsNull()
         {
             var exception = Assert.Throws<ArgumentNullException>(() => new SQLiteWriteOnlyTransaction(ConnectionUtils.CreateConnection(), null));
@@ -41,7 +40,7 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void ExpireJob_SetsJobExpirationData()
         {
             UseConnection(database =>
@@ -77,7 +76,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void PersistJob_ClearsTheJobExpirationData()
         {
             UseConnection(database =>
@@ -113,7 +112,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetJobState_AppendsAStateAndSetItToTheJob()
         {
             UseConnection(database =>
@@ -163,7 +162,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddJobState_JustAddsANewRecordInATable()
         {
             UseConnection(database =>
@@ -200,7 +199,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddToQueue_CallsEnqueue_OnTargetPersistentQueue()
         {
             UseConnection(database =>
@@ -218,7 +217,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void IncrementCounter_AddsRecordToCounterTable_WithPositiveValue()
         {
             UseConnection(database =>
@@ -233,7 +232,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void IncrementCounter_WithExpiry_AddsARecord_WithExpirationTimeSet()
         {
             UseConnection(database =>
@@ -253,7 +252,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void IncrementCounter_WithExistingKey_AddsAnotherRecord()
         {
             UseConnection(database =>
@@ -270,7 +269,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void DecrementCounter_AddsRecordToCounterTable_WithNegativeValue()
         {
             UseConnection(database =>
@@ -285,7 +284,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void DecrementCounter_WithExpiry_AddsARecord_WithExpirationTimeSet()
         {
             UseConnection(database =>
@@ -305,7 +304,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void DecrementCounter_WithExistingKey_AddsAnotherRecord()
         {
             UseConnection(database =>
@@ -322,7 +321,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddToSet_AddsARecord_IfThereIsNo_SuchKeyAndValue()
         {
             UseConnection(database =>
@@ -337,7 +336,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddToSet_AddsARecord_WhenKeyIsExists_ButValuesAreDifferent()
         {
             UseConnection(database =>
@@ -354,7 +353,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddToSet_DoesNotAddARecord_WhenBothKeyAndValueAreExist()
         {
             UseConnection(database =>
@@ -371,7 +370,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddToSet_WithScore_AddsARecordWithScore_WhenBothKeyAndValueAreNotExist()
         {
             UseConnection(database =>
@@ -386,7 +385,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddToSet_WithScore_UpdatesAScore_WhenBothKeyAndValueAreExist()
         {
             UseConnection(database =>
@@ -403,7 +402,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromSet_RemovesARecord_WithGivenKeyAndValue()
         {
             UseConnection(database =>
@@ -423,7 +422,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromSet_DoesNotRemoveRecord_WithSameKey_AndDifferentValue()
         {
             UseConnection(database =>
@@ -440,7 +439,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromSet_DoesNotRemoveRecord_WithSameValue_AndDifferentKey()
         {
             UseConnection(database =>
@@ -457,7 +456,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void InsertToList_AddsARecord_WithGivenValues()
         {
             UseConnection(database =>
@@ -471,7 +470,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void InsertToList_AddsAnotherRecord_WhenBothKeyAndValueAreExist()
         {
             UseConnection(database =>
@@ -488,7 +487,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromList_RemovesAllRecords_WithGivenKeyAndValue()
         {
             UseConnection(database =>
@@ -506,7 +505,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromList_DoesNotRemoveRecords_WithSameKey_ButDifferentValue()
         {
             UseConnection(database =>
@@ -523,7 +522,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveFromList_DoesNotRemoveRecords_WithSameValue_ButDifferentKey()
         {
             UseConnection(database =>
@@ -540,7 +539,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void TrimList_TrimsAList_ToASpecifiedRange()
         {
             UseConnection(database =>
@@ -562,7 +561,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void TrimList_RemovesRecordsToEnd_IfKeepAndingAt_GreaterThanMaxElementIndex()
         {
             UseConnection(database =>
@@ -581,7 +580,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void TrimList_RemovesAllRecords_WhenStartingFromValue_GreaterThanMaxElementIndex()
         {
             UseConnection(database =>
@@ -598,7 +597,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void TrimList_RemovesAllRecords_IfStartFromGreaterThanEndingAt()
         {
             UseConnection(database =>
@@ -615,7 +614,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void TrimList_RemovesRecords_OnlyOfAGivenKey()
         {
             UseConnection(database =>
@@ -632,7 +631,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetRangeInHash_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection(database =>
@@ -644,7 +643,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetRangeInHash_ThrowsAnException_WhenKeyValuePairsArgumentIsNull()
         {
             UseConnection(database =>
@@ -656,7 +655,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void SetRangeInHash_MergesAllRecords()
         {
             UseConnection(database =>
@@ -675,7 +674,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveHash_ThrowsAnException_WhenKeyIsNull()
         {
             UseConnection(database =>
@@ -685,7 +684,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveHash_RemovesAllHashRecords()
         {
             UseConnection(database =>
@@ -706,7 +705,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void ExpireSet_SetsSetExpirationData()
         {
             UseConnection(database =>
@@ -728,7 +727,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void ExpireList_SetsListExpirationData()
         {
             UseConnection(database =>
@@ -749,7 +748,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void ExpireHash_SetsHashExpirationData()
         {
             UseConnection(database =>
@@ -771,7 +770,7 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void PersistSet_ClearsTheSetExpirationData()
         {
             UseConnection(database =>
@@ -792,7 +791,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void PersistList_ClearsTheListExpirationData()
         {
             UseConnection(database =>
@@ -813,7 +812,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void PersistHash_ClearsTheHashExpirationData()
         {
             UseConnection(database =>
@@ -834,7 +833,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void AddRangeToSet_AddToExistingSetData()
         {
             UseConnection(database =>
@@ -866,7 +865,7 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void RemoveSet_ClearsTheSetData()
         {
             UseConnection(database =>
@@ -912,7 +911,7 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseConnection(Action<HangfireDbContext> action)
         {
-            HangfireDbContext connection = ConnectionUtils.CreateConnection();
+            using var connection = ConnectionUtils.CreateConnection();
             action(connection);
         }
 

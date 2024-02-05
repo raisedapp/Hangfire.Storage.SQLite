@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class SQLiteMonitoringApiFacts
     {
         private const string DefaultQueue = "default";
@@ -33,7 +32,7 @@ namespace Hangfire.Storage.SQLite.Test
             _providers = new PersistentJobQueueProviderCollection(provider.Object);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetStatistics_ReturnsZero_WhenNoJobsExist()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -46,7 +45,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void GetStatistics_ReturnsExpectedCounts_WhenJobsExist()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -66,7 +65,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void JobDetails_ReturnsNull_WhenThereIsNoSuchJob()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -76,7 +75,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void JobDetails_ReturnsResult_WhenJobExists()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -93,7 +92,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void EnqueuedJobs_ReturnsEmpty_WhenThereIsNoJobs()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -110,7 +109,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void EnqueuedJobs_ReturnsSingleJob_WhenOneJobExistsThatIsNotFetched()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -128,7 +127,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void EnqueuedJobs_ReturnsEmpty_WhenOneJobExistsThatIsFetched()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -146,7 +145,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void EnqueuedJobs_ReturnsUnfetchedJobsOnly_WhenMultipleJobsExistsInFetchedAndUnfetchedStates()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -166,7 +165,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void FetchedJobs_ReturnsEmpty_WhenThereIsNoJobs()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -183,7 +182,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void FetchedJobs_ReturnsSingleJob_WhenOneJobExistsThatIsFetched()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -201,7 +200,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void FetchedJobs_ReturnsEmpty_WhenOneJobExistsThatIsNotFetched()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -219,7 +218,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void FetchedJobs_ReturnsFetchedJobsOnly_WhenMultipleJobsExistsInFetchedAndUnfetchedStates()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -239,7 +238,7 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void ProcessingJobs_ReturnsProcessingJobsOnly_WhenMultipleJobsExistsInProcessingSucceededAndEnqueuedState()
         {
             UseMonitoringApi((database, monitoringApi) =>
@@ -283,9 +282,10 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseMonitoringApi(Action<HangfireDbContext, SQLiteMonitoringApi> action)
         {
-            var database = ConnectionUtils.CreateConnection();
-            var connection = new SQLiteMonitoringApi(database, _providers);
-            action(database, connection);
+            using var storage = ConnectionUtils.CreateStorage();
+            var connection = new SQLiteMonitoringApi(storage, _providers);
+            using var dbContext = storage.CreateAndOpenConnection();
+            action(dbContext, connection);
         }
 
         private HangfireJob CreateJobInState(HangfireDbContext database, string stateName, Func<HangfireJob, HangfireJob> visitor = null)

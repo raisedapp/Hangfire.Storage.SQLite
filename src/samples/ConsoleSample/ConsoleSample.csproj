@@ -1,27 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <Authors>RaisedApp</Authors>
-    <Company>RaisedApp</Company>
-    <Copyright>Copyright © 2019 - Present</Copyright>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/raisedapp/Hangfire.Storage.SQLite</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/raisedapp/Hangfire.Storage.SQLite</RepositoryUrl>
-    <RepositoryType>git</RepositoryType> 
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\main\Hangfire.Storage.SQLite\Hangfire.Storage.SQLite.csproj" />
-  </ItemGroup>  
+  </ItemGroup>
 
 </Project>

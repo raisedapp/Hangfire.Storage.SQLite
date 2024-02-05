@@ -3,28 +3,26 @@ using Hangfire.Storage.SQLite.Entities;
 using Newtonsoft.Json;
 using SQLite;
 using System;
+using System.Threading;
 
 namespace Hangfire.Storage.SQLite
 {
     /// <summary>
     /// Represents SQLite database context for Hangfire
     /// </summary>
-    public class HangfireDbContext
+    public class HangfireDbContext : IDisposable
     {
         private readonly ILog Logger = LogProvider.For<HangfireDbContext>();
 
         /// <summary>
         /// 
         /// </summary>
-        public SQLiteConnection Database { get; }
+        public SQLiteConnection Database { get; private set; }
 
         /// <summary>
         /// 
         /// </summary>
         public SQLiteStorageOptions StorageOptions { get; private set; }
-
-        private static readonly object Locker = new object();
-        private static volatile HangfireDbContext _instance;
 
         /// <summary>
         /// SQLite database connection identifier
@@ -35,46 +33,16 @@ namespace Hangfire.Storage.SQLite
         /// <summary>
         /// Starts SQLite database using a connection string for file system database
         /// </summary>
-        /// <param name="databasePath">the database path</param>
+        /// <param name="connection">the database path</param>
+        /// <param name="logger"></param>
         /// <param name="prefix">Table prefix</param>
-        private HangfireDbContext(string databasePath, string prefix = "hangfire")
+        internal HangfireDbContext(SQLiteConnection connection, string prefix = "hangfire")
         {
-            //UTC - Internal JSON
-            GlobalConfiguration.Configuration
-                .UseSerializerSettings(new JsonSerializerSettings()
-                {
-                    DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                    DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                    DateFormatString = "yyyy-MM-dd HH:mm:ss.fff"
-                });
-
-            Database = new SQLiteConnection(databasePath, SQLiteOpenFlags.ReadWrite |
-                SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex, storeDateTimeAsTicks: true);
+            Database = connection;
 
             ConnectionId = Guid.NewGuid().ToString();
         }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="databasePath"></param>
-        /// <param name="prefix"></param>
-        /// <returns></returns>
-        internal static HangfireDbContext Instance(string databasePath, string prefix = "hangfire")
-        {
-            if (_instance != null) return _instance;
-            lock (Locker)
-            {
-                if (_instance == null)
-                {
-                    _instance = new HangfireDbContext(databasePath, prefix);
-                }
-            }
-
-            return _instance;
-        }
-
+        
         /// <summary>
         /// Initializes initial tables schema for Hangfire
         /// </summary>
@@ -82,38 +50,55 @@ namespace Hangfire.Storage.SQLite
         {
             StorageOptions = storageOptions;
 
-            AutoClean(storageOptions);
-
-            Database.CreateTable<AggregatedCounter>();
-            Database.CreateTable<Counter>();
-            Database.CreateTable<HangfireJob>();
-            Database.CreateTable<HangfireList>();
-            Database.CreateTable<Hash>();
-            Database.CreateTable<JobParameter>();
-            Database.CreateTable<JobQueue>();
-            Database.CreateTable<HangfireServer>();
-            Database.CreateTable<Set>();
-            Database.CreateTable<State>();
-            Database.CreateTable<DistributedLock>();
-
-            AggregatedCounterRepository = Database.Table<AggregatedCounter>();
-            CounterRepository = Database.Table<Counter>();
-            HangfireJobRepository = Database.Table<HangfireJob>();
-            HangfireListRepository = Database.Table<HangfireList>();
-            HashRepository = Database.Table<Hash>();
-            JobParameterRepository = Database.Table<JobParameter>();
-            JobQueueRepository = Database.Table<JobQueue>();
-            HangfireServerRepository = Database.Table<HangfireServer>();
-            SetRepository = Database.Table<Set>();
-            StateRepository = Database.Table<State>();
-            DistributedLockRepository = Database.Table<DistributedLock>();
+            TryFewTimesDueToConcurrency(() => InitializePragmas(storageOptions));
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<AggregatedCounter>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<Counter>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<HangfireJob>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<HangfireList>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<Hash>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<JobParameter>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<JobQueue>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<HangfireServer>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<Set>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<State>());
+            TryFewTimesDueToConcurrency(() => Database.CreateTable<DistributedLock>());
+            
+            void TryFewTimesDueToConcurrency(Action action, int times = 10)
+            {
+                var current = 0;
+                while (current < times)
+                {
+                    try
+                    {
+                        action();
+                        return;
+                    }
+                    catch (SQLiteException e) when (e.Result == SQLite3.Result.Locked)
+                    {
+                        // This can happen if too many connections are opened
+                        // at the same time, trying to create tables
+                        Thread.Sleep(10);
+                    }
+                    current++;
+                }
+            }
         }
 
-        private void AutoClean(SQLiteStorageOptions storageOptions)
+
+        private void InitializePragmas(SQLiteStorageOptions storageOptions)
         {
             try
             {
-                Database.Execute($@"PRAGMA auto_vacuum = '{(int)storageOptions.AutoVacuumSelected}'");
+                Database.ExecuteScalar<string>($"PRAGMA journal_mode = {storageOptions.JournalMode}", Array.Empty<object>());
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, () => $"Error set journal mode. Details: {ex}");
+            }
+
+            try
+            {
+                Database.ExecuteScalar<string>($"PRAGMA auto_vacuum = '{(int)storageOptions.AutoVacuumSelected}'", Array.Empty<object>());
             }
             catch (Exception ex)
             {
@@ -121,26 +106,40 @@ namespace Hangfire.Storage.SQLite
             }
         }
 
-        public TableQuery<AggregatedCounter> AggregatedCounterRepository { get; private set; }
+        public TableQuery<AggregatedCounter> AggregatedCounterRepository => Database.Table<AggregatedCounter>();
 
-        public TableQuery<Counter> CounterRepository { get; private set; }
+        public TableQuery<Counter> CounterRepository => Database.Table<Counter>();
 
-        public TableQuery<HangfireJob> HangfireJobRepository { get; private set; }
+        public TableQuery<HangfireJob> HangfireJobRepository => Database.Table<HangfireJob>();
 
-        public TableQuery<HangfireList> HangfireListRepository { get; private set; }
+        public TableQuery<HangfireList> HangfireListRepository => Database.Table<HangfireList>();
 
-        public TableQuery<Hash> HashRepository { get; private set; }
+        public TableQuery<Hash> HashRepository => Database.Table<Hash>();
 
-        public TableQuery<JobParameter> JobParameterRepository { get; private set; }
+        public TableQuery<JobParameter> JobParameterRepository => Database.Table<JobParameter>();
 
-        public TableQuery<JobQueue> JobQueueRepository { get; private set; }
+        public TableQuery<JobQueue> JobQueueRepository => Database.Table<JobQueue>();
 
-        public TableQuery<HangfireServer> HangfireServerRepository { get; private set; }
+        public TableQuery<HangfireServer> HangfireServerRepository => Database.Table<HangfireServer>();
 
-        public TableQuery<Set> SetRepository { get; private set; }
+        public TableQuery<Set> SetRepository => Database.Table<Set>();
 
-        public TableQuery<State> StateRepository { get; private set; }
+        public TableQuery<State> StateRepository => Database.Table<State>();
 
-        public TableQuery<DistributedLock> DistributedLockRepository { get; private set; }
+        public TableQuery<DistributedLock> DistributedLockRepository => Database.Table<DistributedLock>();
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Database?.Dispose();
+                Database = null;
+            }
+        }
+        
+        public void Dispose()
+        {
+            Dispose(true);
+        }
     }
 }

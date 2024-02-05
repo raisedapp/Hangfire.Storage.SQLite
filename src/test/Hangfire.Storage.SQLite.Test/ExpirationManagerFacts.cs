@@ -7,7 +7,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class ExpirationManagerFacts
     {
         private readonly SQLiteStorage _storage;
@@ -29,40 +28,40 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Throws<ArgumentNullException>(() => new ExpirationManager(null));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_RemovesOutdatedRecords()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             CreateExpirationEntries(connection, DateTime.UtcNow.AddMonths(-1));
             var manager = CreateManager();
             manager.Execute(_token);
             Assert.True(IsEntryExpired(connection));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_DoesNotRemoveEntries_WithNoExpirationTimeSet()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             CreateExpirationEntries(connection, null);
             var manager = CreateManager();
             manager.Execute(_token);
             Assert.False(IsEntryExpired(connection));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_DoesNotRemoveEntries_WithFreshExpirationTime()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             CreateExpirationEntries(connection, DateTime.UtcNow.AddMonths(1));
             var manager = CreateManager();
             manager.Execute(_token);
             Assert.False(IsEntryExpired(connection));
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_Processes_CounterTable()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             connection.Database.Insert(new Counter
             {
                 Id = Guid.NewGuid().ToString(),
@@ -76,10 +75,10 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal(0, count);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_Processes_JobTable()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             connection.Database.Insert(new HangfireJob()
             {
                 InvocationData = "",
@@ -93,10 +92,10 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal(0, count);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_Processes_ListTable()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             connection.Database.Insert(new HangfireList()
             {
                 Key = "key",
@@ -110,10 +109,10 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal(0, count);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_Processes_SetTable()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             connection.Database.Insert(new Set
             {
                 Key = "key",
@@ -129,10 +128,10 @@ namespace Hangfire.Storage.SQLite.Test
             Assert.Equal(0, count);
         }
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_Processes_HashTable()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             connection.Database.Insert(new Hash()
             {
                 Key = "key",
@@ -149,10 +148,10 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
 
-        [Fact, CleanDatabase]
+        [Fact]
         public void Execute_Processes_AggregatedCounterTable()
         {
-            var connection = ConnectionUtils.CreateConnection();
+            using var connection = _storage.CreateAndOpenConnection();
             connection.Database.Insert(new AggregatedCounter
             {
                 Key = "key",

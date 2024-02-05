@@ -30,12 +30,12 @@ namespace Hangfire.Storage.SQLite
             _dbContext = connection ?? throw new ArgumentNullException(nameof(connection));
             _queueProviders = queueProviders ?? throw new ArgumentNullException(nameof(queueProviders));
         }
-        
+
         private void QueueCommand(Action<HangfireDbContext> action)
         {
             _commandQueue.Enqueue(action);
         }
-        
+
         public override void AddJobState(string jobId, IState state)
         {
             QueueCommand(_ =>
@@ -51,7 +51,7 @@ namespace Hangfire.Storage.SQLite
                 };
 
                 _.Database.Insert(jobState);
-            });            
+            });
         }
 
         /// <summary>
@@ -67,12 +67,12 @@ namespace Hangfire.Storage.SQLite
             QueueCommand(_ =>
             {
                 persistentQueue.Enqueue(queue, jobId);
-            });            
+            });
         }
 
         public override void AddToSet(string key, string value)
         {
-            AddToSet(key, value, 0.0);            
+            AddToSet(key, value, 0.0);
         }
 
         /// <summary>
@@ -113,13 +113,16 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            lock (_lockObject) 
-            {
-                _commandQueue.ToList().ForEach(_ =>
+            Retry.Twice((attempts) => {
+
+                lock (_lockObject)
                 {
-                    _.Invoke(_dbContext);
-                });
-            }
+                    _commandQueue.ToList().ForEach(_ =>
+                    {
+                        _.Invoke(_dbContext);
+                    });
+                }
+            });
         }
 
         /// <summary>
@@ -129,7 +132,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="expireIn"></param>        
         public override void DecrementCounter(string key)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 _.Database.Insert(new Counter
                 {
@@ -140,7 +143,7 @@ namespace Hangfire.Storage.SQLite
             });
 
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -167,12 +170,12 @@ namespace Hangfire.Storage.SQLite
         /// <param name="expireIn"></param>        
         public override void ExpireJob(string jobId, TimeSpan expireIn)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 var iJobId = int.Parse(jobId);
                 var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
 
-                if (job != null) 
+                if (job != null)
                 {
                     var expireAt = DateTime.UtcNow.Add(expireIn);
                     job.ExpireAt = expireAt;
@@ -181,16 +184,16 @@ namespace Hangfire.Storage.SQLite
                     _.Database.Execute($"UPDATE [{DefaultValues.StateTblName}] SET ExpireAt = {expireAt.Ticks} WHERE JobId = {jobId}");
                     _.Database.Execute($"UPDATE [{DefaultValues.JobParameterTblName}] SET ExpireAt = {expireAt.Ticks} WHERE JobId = {jobId}");
                 }
-            });   
+            });
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="key"></param>
         public override void IncrementCounter(string key)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 _.Database.Insert(new Counter
                 {
@@ -214,7 +217,7 @@ namespace Hangfire.Storage.SQLite
                 });
             });
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -222,7 +225,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="value"></param>
         public override void InsertToList(string key, string value)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 _.Database.Insert(new HangfireList
                 {
@@ -232,26 +235,26 @@ namespace Hangfire.Storage.SQLite
                 });
             });
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="jobId"></param>
         public override void PersistJob(string jobId)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 var iJobId = int.Parse(jobId);
                 var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
 
-                if (job != null) 
+                if (job != null)
                 {
                     job.ExpireAt = DateTime.MinValue;
                     _.Database.Update(job);
                 }
             });
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -259,7 +262,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="value"></param>
         public override void RemoveFromList(string key, string value)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 _.HangfireListRepository.Delete(x => x.Key == key && x.Value == value);
             });
@@ -272,7 +275,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="value"></param>        
         public override void RemoveFromSet(string key, string value)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 _.SetRepository.Delete(x => x.Key == key && x.Value == value);
             });
@@ -288,7 +291,7 @@ namespace Hangfire.Storage.SQLite
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 _.HashRepository.Delete(x => x.Key == key);
             });
@@ -301,7 +304,7 @@ namespace Hangfire.Storage.SQLite
         /// <param name="state"></param>        
         public override void SetJobState(string jobId, IState state)
         {
-            QueueCommand(_ => 
+            QueueCommand(_ =>
             {
                 var iJobId = int.Parse(jobId);
                 var job = _.HangfireJobRepository.FirstOrDefault(x => x.Id == iJobId);
@@ -329,13 +332,13 @@ namespace Hangfire.Storage.SQLite
                     catch (Exception ex)
                     {
                         _.Database.Rollback();
-                        
+
                         throw ex;
                     }
                 }
-            });        
+            });
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -349,12 +352,12 @@ namespace Hangfire.Storage.SQLite
 
             if (keyValuePairs == null)
                 throw new ArgumentNullException(nameof(keyValuePairs));
-            
+
             foreach (var keyValuePair in keyValuePairs)
             {
                 var field = keyValuePair.Key;
                 var value = keyValuePair.Value;
-                
+
                 QueueCommand(_ =>
                 {
                     var hash = new Hash
@@ -376,7 +379,7 @@ namespace Hangfire.Storage.SQLite
                         _.Database.Update(hash);
                     }
                 });
-            }        
+            }
         }
 
         /// <summary>
@@ -422,7 +425,7 @@ namespace Hangfire.Storage.SQLite
                 }
             });
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -432,18 +435,18 @@ namespace Hangfire.Storage.SQLite
         public override void ExpireSet(string key, TimeSpan expireIn)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
-            
+
             QueueCommand(x =>
             {
                 var states = x.SetRepository.Where(_ => _.Key == key).ToList();
-                foreach(var state in states)
+                foreach (var state in states)
                 {
                     state.ExpireAt = DateTime.UtcNow.Add(expireIn);
                     x.Database.Update(state);
                 }
             });
-        }        
-        
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -455,12 +458,12 @@ namespace Hangfire.Storage.SQLite
             QueueCommand(x =>
             {
                 var states = x.SetRepository.Where(_ => _.Key == key).ToList();
-                foreach(var state in states)
+                foreach (var state in states)
                 {
                     state.ExpireAt = DateTime.MinValue;
                     x.Database.Update(state);
                 }
-                
+
             });
         }
 
@@ -475,11 +478,11 @@ namespace Hangfire.Storage.SQLite
             QueueCommand(x =>
             {
                 var states = x.HangfireListRepository.Where(_ => _.Key == key).ToList();
-                foreach(var state in states)
+                foreach (var state in states)
                 {
                     state.ExpireAt = DateTime.MinValue;
                     x.Database.Update(state);
-                }       
+                }
             });
         }
 
@@ -494,11 +497,11 @@ namespace Hangfire.Storage.SQLite
             QueueCommand(x =>
             {
                 var states = x.HashRepository.Where(_ => _.Key == key).ToList();
-                foreach(var state in states)
+                foreach (var state in states)
                 {
                     state.ExpireAt = DateTime.MinValue;
                     x.Database.Update(state);
-                }    
+                }
             });
         }
 
@@ -512,7 +515,7 @@ namespace Hangfire.Storage.SQLite
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (items == null) throw new ArgumentNullException(nameof(items));
-            
+
             foreach (var item in items)
             {
                 QueueCommand(x =>
@@ -549,7 +552,7 @@ namespace Hangfire.Storage.SQLite
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
             QueueCommand(x => x.SetRepository.Delete(_ => _.Key == key));
-        }        
+        }
 
         /// <summary>
         /// 
@@ -563,16 +566,16 @@ namespace Hangfire.Storage.SQLite
             {
                 var start = keepStartingFrom + 1;
                 var end = keepEndingAt + 1;
-                
+
                 var items = _.HangfireListRepository
                     .Where(x => x.Key == key)
                     .Reverse()
-                    .Select((data, i) => new {Index = i + 1, Data = data.Id})
+                    .Select((data, i) => new { Index = i + 1, Data = data.Id })
                     .Where(x => !((x.Index >= start) && (x.Index <= end)))
                     .Select(x => x.Data)
                     .ToList();
 
-                foreach(var id in items)
+                foreach (var id in items)
                 {
                     _.HangfireListRepository.Delete(x => x.Id == id);
                 }

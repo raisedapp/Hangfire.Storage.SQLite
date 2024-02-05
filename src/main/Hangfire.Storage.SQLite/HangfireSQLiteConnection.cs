@@ -38,9 +38,17 @@ namespace Hangfire.Storage.SQLite
             _queueProviders = queueProviders ?? throw new ArgumentNullException(nameof(queueProviders));
         }
 
+        public override void Dispose()
+        {
+            DbContext.Dispose();
+            base.Dispose();
+        }
+
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
-            return new SQLiteDistributedLock($"HangFire:{resource}", timeout, DbContext, _storageOptions);
+            return Retry.Twice((_) =>
+                new SQLiteDistributedLock($"HangFire:{resource}", timeout, DbContext, _storageOptions)
+            );
         }
 
         public override void AnnounceServer(string serverId, ServerContext context)
@@ -87,6 +95,14 @@ namespace Hangfire.Storage.SQLite
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
+            // DANIEL WAS HERE
+            return Retry.Twice(
+                (attempt) => _CreateExpiredJob(job, parameters, createdAt, expireIn)
+            );
+        }
+
+        private string _CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
+        {
             lock (_lock)
             {
                 var invocationData = InvocationData.SerializeJob(job);
@@ -337,17 +353,21 @@ namespace Hangfire.Storage.SQLite
                 throw new ArgumentNullException(nameof(serverId));
             }
 
-            var server = DbContext.HangfireServerRepository.FirstOrDefault(_ => _.Id == serverId);
+            var server = Retry.Twice((attempts) =>
+                DbContext.HangfireServerRepository.Where(_ => _.Id == serverId)
+                    .ToArray()
+                    .FirstOrDefault()
+            );
+
             if (server == null)
                 throw new BackgroundServerGoneException();
 
             server.LastHeartbeat = DateTime.UtcNow;
-            var affected = DbContext.Database.Update(server);
+
+            var affected = Retry.Twice((_) => DbContext.Database.Update(server));
 
             if (affected == 0)
-            {
                 throw new BackgroundServerGoneException();
-            }
         }
 
         public override void RemoveServer(string serverId)

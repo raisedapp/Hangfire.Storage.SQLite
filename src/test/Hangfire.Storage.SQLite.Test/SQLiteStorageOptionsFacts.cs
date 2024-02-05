@@ -5,7 +5,6 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    [Collection("Database")]
     public class SQLiteStorageOptionsFacts
     {
         [Fact]

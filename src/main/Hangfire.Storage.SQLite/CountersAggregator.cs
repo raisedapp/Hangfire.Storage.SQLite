@@ -2,9 +2,7 @@
 using Hangfire.Logging;
 using Hangfire.Server;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Hangfire.Storage.SQLite.Entities;
 
@@ -13,9 +11,9 @@ namespace Hangfire.Storage.SQLite
     /// <summary>
     /// Represents Counter collection aggregator for SQLite database
     /// </summary> 
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
     public class CountersAggregator : IBackgroundProcess, IServerComponent
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
     {
         private static readonly ILog Logger = LogProvider.For<CountersAggregator>();
         private const int NumberOfRecordsInSinglePass = 1000;
@@ -51,10 +49,16 @@ namespace Hangfire.Storage.SQLite
         /// <param name="cancellationToken">Cancellation token</param>
         public void Execute(CancellationToken cancellationToken)
         {
+            // DANIEL WAS HERE
+            Retry.Twice((_) => _Execute(cancellationToken));
+        }
+
+        private void _Execute(CancellationToken cancellationToken)
+        {
             Logger.DebugFormat("Aggregating records in 'Counter' table...");
 
             long removedCount = 0;
-            
+
             do
             {
                 using (var storageConnection = (HangfireSQLiteConnection)_storage.GetConnection())
@@ -97,7 +101,7 @@ namespace Hangfire.Storage.SQLite
                                 counter.Value += item.Value;
                                 counter.ExpireAt = item.ExpireAt > aggregatedItem.ExpireAt
                                     ? (item.ExpireAt > DateTime.MinValue ? item.ExpireAt : DateTime.MinValue)
-                                    : (aggregatedItem.ExpireAt > DateTime.MinValue ? 
+                                    : (aggregatedItem.ExpireAt > DateTime.MinValue ?
                                         aggregatedItem.ExpireAt : DateTime.MinValue);
                                 storageDb.Database.Update(counter);
                             }
