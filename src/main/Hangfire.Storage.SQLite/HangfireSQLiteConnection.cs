@@ -47,7 +47,7 @@ namespace Hangfire.Storage.SQLite
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
             return Retry.Twice((_) =>
-                new SQLiteDistributedLock($"HangFire:{resource}", timeout, DbContext, _storageOptions)
+                SQLiteDistributedLock.Acquire($"HangFire:{resource}", timeout, DbContext, _storageOptions)
             );
         }
 

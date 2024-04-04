@@ -1,8 +1,10 @@
 using Hangfire.Storage.SQLite.Entities;
 using Hangfire.Storage.SQLite.Test.Utils;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
@@ -15,7 +17,7 @@ namespace Hangfire.Storage.SQLite.Test
             UseConnection(database =>
             {
                 var exception = Assert.Throws<ArgumentNullException>(
-                    () => new SQLiteDistributedLock(null, TimeSpan.Zero, database, new SQLiteStorageOptions()));
+                    () => SQLiteDistributedLock.Acquire(null, TimeSpan.Zero, database, new SQLiteStorageOptions()));
 
                 Assert.Equal("resource", exception.ParamName);
             });
@@ -25,7 +27,7 @@ namespace Hangfire.Storage.SQLite.Test
         public void Ctor_ThrowsAnException_WhenConnectionIsNull()
         {
             var exception = Assert.Throws<ArgumentNullException>(
-                () => new SQLiteDistributedLock("resource1", TimeSpan.Zero, null, new SQLiteStorageOptions()));
+                () => SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, null, new SQLiteStorageOptions()));
 
             Assert.Equal("database", exception.ParamName);
         }
@@ -36,7 +38,7 @@ namespace Hangfire.Storage.SQLite.Test
             UseConnection(database =>
             {
                 using (
-                    new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
+                    SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
                     var locksCount =
                         database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
@@ -50,7 +52,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseConnection(database =>
             {
-                using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
+                using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
                     var locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                     Assert.Equal(1, locksCount);
@@ -62,22 +64,33 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
         [Fact]
-        public void Ctor_AcquireLockWithinSameThread_WhenResourceIsLocked()
+        public void Ctor_AcquireLockWithinSameThread_WhenResourceIsLocked_Should_Fail()
         {
             UseConnection(database =>
             {
-                using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
+                using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
                     var locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                     Assert.Equal(1, locksCount);
 
-                    using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
+                    Assert.Throws<DistributedLockTimeoutException>(() =>
                     {
-                        locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
-                        Assert.Equal(1, locksCount);
-                    }
+                        using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
+                        {
+                            locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
+                            Assert.Equal(1, locksCount);
+                        }
+                    });
                 }
             });
+        }
+        
+        private Thread NewBackgroundThread(ThreadStart start)
+        {
+            return new Thread(start)
+            {
+                IsBackground = true
+            };
         }
 
         [Fact]
@@ -85,15 +98,15 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseConnection(database =>
             {
-                using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
+                using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                 {
                     var locksCount = database.DistributedLockRepository.Count(_ => _.Resource == "resource1");
                     Assert.Equal(1, locksCount);
 
-                    var t = new Thread(() =>
+                    var t = NewBackgroundThread(() =>
                     {
                         Assert.Throws<DistributedLockTimeoutException>(() =>
-                                new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()));
+                                SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()));
                     });
                     t.Start();
                     Assert.True(t.Join(5000), "Thread is hanging unexpected");
@@ -106,11 +119,11 @@ namespace Hangfire.Storage.SQLite.Test
         {
             var storage = ConnectionUtils.CreateStorage();
             using var mre = new ManualResetEventSlim();
-            var t = new Thread(() =>
+            var t = NewBackgroundThread(() =>
             {
                 UseConnection(database =>
                 {
-                    using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
+                    using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions()))
                     {
                         mre.Set();
                         Thread.Sleep(TimeSpan.FromSeconds(3));
@@ -125,11 +138,13 @@ namespace Hangfire.Storage.SQLite.Test
                 mre.Wait(TimeSpan.FromSeconds(5));
 
                 // Record when we try to aquire the lock
-                var startTime = DateTime.UtcNow;
-                using (new SQLiteDistributedLock("resource1", TimeSpan.FromSeconds(10), database, new SQLiteStorageOptions()))
+                var startTime = Stopwatch.StartNew();
+                using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.FromMinutes(15), database, new SQLiteStorageOptions()))
                 {
-                    Assert.InRange(DateTime.UtcNow - startTime, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+                    Assert.InRange(startTime.Elapsed, TimeSpan.Zero, TimeSpan.FromSeconds(5));
                 }
+
+                t.Join();
             }, storage);
         }
 
@@ -143,14 +158,14 @@ namespace Hangfire.Storage.SQLite.Test
             var storage = ConnectionUtils.CreateStorage();
             
             // Spawn multiple threads to race each other.
-            var threads = Enumerable.Range(0, numThreads).Select(i => new Thread(() =>
+            var threads = Enumerable.Range(0, numThreads).Select(i => NewBackgroundThread(() =>
             {
                 using var connection = storage.CreateAndOpenConnection();
                 // Wait for the start signal.
                 manualResetEvent.Wait();
 
                 // Attempt to acquire the distributed lock.
-                using (new SQLiteDistributedLock("resource1", TimeSpan.FromSeconds(10), connection, new SQLiteStorageOptions()))
+                using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.FromSeconds(10), connection, new SQLiteStorageOptions()))
                 {
                     // Find out if any other threads managed to acquire the lock.
                     var oldConcurrencyCounter = Interlocked.CompareExchange(ref concurrencyCounter, 1, 0);
@@ -174,7 +189,6 @@ namespace Hangfire.Storage.SQLite.Test
             threads.ForEach(t => Assert.True(t.Join(TimeSpan.FromSeconds(120)), "Thread is hanging unexpected"));
 
             // All the threads should report success.
-            Interlocked.MemoryBarrier();
             Assert.DoesNotContain(false, success);
         }
 
@@ -184,7 +198,7 @@ namespace Hangfire.Storage.SQLite.Test
             UseConnection(database =>
             {
                 var exception = Assert.Throws<ArgumentNullException>(() =>
-                    new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, null));
+                    SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, null));
 
                 Assert.Equal("storageOptions", exception.ParamName);
             });
@@ -195,7 +209,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseConnection(database =>
             {
-                using (new SQLiteDistributedLock("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions() { DistributedLockLifetime = TimeSpan.FromSeconds(3) }))
+                using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.Zero, database, new SQLiteStorageOptions() { DistributedLockLifetime = TimeSpan.FromSeconds(3) }))
                 {
                     DateTime initialExpireAt = DateTime.UtcNow;
                     Thread.Sleep(TimeSpan.FromSeconds(5));
@@ -223,18 +237,85 @@ namespace Hangfire.Storage.SQLite.Test
 
                 // try to get the lock in the next 10 seconds
                 // ideally, after ~3 seconds, the constructor should succeed
-                using (new SQLiteDistributedLock("resource1", TimeSpan.FromSeconds(10), database, new SQLiteStorageOptions() { DistributedLockLifetime = TimeSpan.FromSeconds(3) }))
+                using (SQLiteDistributedLock.Acquire("resource1", TimeSpan.FromSeconds(10), database, new SQLiteStorageOptions() { DistributedLockLifetime = TimeSpan.FromSeconds(3) }))
                 {
                     DistributedLock lockEntry = database.DistributedLockRepository.FirstOrDefault(_ => _.Resource == "resource1");
                     Assert.NotNull(lockEntry);
                 }
             });
         }
+        
+        [Fact]
+        public async Task Heartbeat_Fires_WithSuccess()
+        {
+            await UseConnectionAsync(async database =>
+            {
+                // try to get the lock in the next 10 seconds
+                // ideally, after ~3 seconds, the constructor should succeed
+                using var slock = SQLiteDistributedLock.Acquire("resource1", TimeSpan.FromSeconds(10), database, new SQLiteStorageOptions
+                {
+                    DistributedLockLifetime = TimeSpan.FromSeconds(3)
+                });
+                var result = await WaitForHeartBeat(slock, TimeSpan.FromSeconds(3));
+                Assert.True(result);
+            });
+        }
+        
+        [Fact]
+        public void Heartbeat_Fires_With_Fail_If_Lock_No_Longer_Exists()
+        {
+            UseConnection(database =>
+            {
+                // try to get the lock in the next 10 seconds
+                // ideally, after ~3 seconds, the constructor should succeed
+                using var slock = SQLiteDistributedLock.Acquire("resource1", TimeSpan.FromSeconds(10), database, new SQLiteStorageOptions
+                {
+                    DistributedLockLifetime = TimeSpan.FromSeconds(14)
+                });
 
+                using var mre = new ManualResetEventSlim();
+                bool? lastResult = null;
+                slock.Heartbeat += success =>
+                {
+                    lastResult = success;
+                    if (!success)
+                    {
+                        mre.Set();
+                    }
+                };
+                database.DistributedLockRepository.Delete(x => x.Resource == "resource1");
+
+                mre.Wait(TimeSpan.FromSeconds(10));
+                Assert.False(lastResult, "Lock should have not been updated");
+            });
+        }
+
+        private async Task<bool> WaitForHeartBeat(SQLiteDistributedLock slock, TimeSpan timeOut)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            Action<bool> onHeartbeat = success => tcs.TrySetResult(success);
+            slock.Heartbeat += onHeartbeat;
+
+            try
+            {
+                return await tcs.Task.WaitAsync(timeOut);
+            }
+            finally
+            {
+                slock.Heartbeat -= onHeartbeat;
+            }
+        }
+        
         private static void UseConnection(Action<HangfireDbContext> action, SQLiteStorage storage = null)
         {
             using var connection = storage?.CreateAndOpenConnection() ?? ConnectionUtils.CreateConnection();
             action(connection);
+        }
+        
+        private static async Task UseConnectionAsync(Func<HangfireDbContext, Task> func, SQLiteStorage storage = null)
+        {
+            using var connection = storage?.CreateAndOpenConnection() ?? ConnectionUtils.CreateConnection();
+            await func(connection);
         }
     }
 }
