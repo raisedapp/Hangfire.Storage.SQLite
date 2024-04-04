@@ -105,10 +105,8 @@ namespace Hangfire.Storage.SQLite
 
             try
             {
-                var _lock = new SQLiteDistributedLock(DistributedLockKey, DefaultLockTimeout,
-                    db, db.StorageOptions);
-
-                using (_lock)
+                using (SQLiteDistributedLock.Acquire(DistributedLockKey, DefaultLockTimeout,
+                           db, db.StorageOptions))
                 {
                     rowsAffected = db.Database.Execute(deleteScript);
                 }
