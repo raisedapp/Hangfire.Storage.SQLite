@@ -7,7 +7,7 @@
     <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,8 +20,12 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-      0.4.1
-      - Stability and retry enhancements introduced by: Daniel Lindblom
+      0.4.2
+      -remove re-entrancy (fixes SQLiteDistributedLock doesn't play right with async #68). Thanks to @kirides
+      -pause heartbeat timer while processing. Thanks to @kirides
+      -update expiration using SQL Update statement in a single step. Thanks to @kirides
+      -Added Heartbeat event (for testing). Thanks to @kirides
+      -if we no longer own the lock, we immediately dispose the heartbeat timer (fixes Unable to update heartbeat - still happening in .NET 6.0 #69). Thanks to @kirides
     </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
