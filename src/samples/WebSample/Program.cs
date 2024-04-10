@@ -18,7 +18,10 @@ services.AddHangfire(configuration => configuration
     .UseSQLiteStorage("Hangfire.db")
     .UseHeartbeatPage(checkInterval: TimeSpan.FromSeconds(10))
     .UseJobsLogger());
-services.AddHangfireServer();
+services.AddHangfireServer(options =>
+{
+    options.Queues = new[] { "test_queue_1", "default" };
+});
 
 var app = builder.Build();
 
@@ -26,5 +29,13 @@ app.UseHangfireDashboard(string.Empty);
 
 RecurringJob.AddOrUpdate("TaskMethod()", (TaskSample t) => t.TaskMethod(), Cron.Minutely);
 RecurringJob.AddOrUpdate("TaskMethod2()", (TaskSample t) => t.TaskMethod2(null), Cron.Minutely);
+
+var t = app.Services.GetService<IBackgroundJobClient>();
+t.Enqueue(queue: "test_queue_1", methodCall: () => Console.WriteLine("Testing......"));
+t.Enqueue(queue: "test_queue_1", methodCall: () => Console.WriteLine("Testing......"));
+t.Enqueue(queue: "test_queue_1", methodCall: () => Console.WriteLine("Testing......"));
+t.Enqueue(queue: "test_queue_1", methodCall: () => Console.WriteLine("Testing......"));
+t.Enqueue(queue: "test_queue_1", methodCall: () => Console.WriteLine("Testing......"));
+t.Enqueue(queue: "test_queue_1", methodCall: () => Console.WriteLine("Testing......"));
 
 app.Run();

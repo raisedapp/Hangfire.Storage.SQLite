@@ -7,7 +7,7 @@
     <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
     <Authors>RaisedApp</Authors>
     <Company>RaisedApp</Company>
     <Copyright>Copyright © 2019 - Present</Copyright>
@@ -20,7 +20,7 @@
     <title>Hangfire Storage SQLite</title>    
     <Description>An Alternative SQLite Storage for Hangfire</Description>
     <PackageReleaseNotes>
-      0.4.1
+      0.4.2
       - Stability and retry enhancements introduced by: Daniel Lindblom
     </PackageReleaseNotes>
   </PropertyGroup>

@@ -14,6 +14,24 @@ namespace Hangfire.Storage.SQLite
         private readonly SQLiteDbConnectionFactory _dbConnectionFactory;
 
         private readonly SQLiteStorageOptions _storageOptions;
+
+        private readonly Dictionary<string, bool> _features = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Storage.ExtendedApi", false },
+            { "Job.Queue", true },
+            { "Connection.GetUtcDateTime", false },
+            { "Connection.BatchedGetFirstByLowestScoreFromSet", false },
+            { "Connection.GetSetContains", true },
+            { "Connection.GetSetCount.Limited", false },
+            { "BatchedGetFirstByLowestScoreFromSet", false },
+            { "Transaction.AcquireDistributedLock", true },
+            { "Transaction.CreateJob", true },
+            { "Transaction.SetJobParameter", true },
+            { "TransactionalAcknowledge:InMemoryFetchedJob", false },
+            { "Monitoring.DeletedStateGraphs", false },
+            { "Monitoring.AwaitingJobs", false }
+        };
+
         private ConcurrentQueue<PooledHangfireDbContext> _dbContextPool = new ConcurrentQueue<PooledHangfireDbContext>();
 
         /// <summary>
@@ -111,6 +129,15 @@ namespace Hangfire.Storage.SQLite
             {
                 dbContext.PhaseOut = true;
             }
+        }
+
+        public override bool HasFeature(string featureId)
+        {
+            if (featureId == null) throw new ArgumentNullException(nameof(featureId));
+
+            return _features.TryGetValue(featureId, out var isSupported)
+                ? isSupported
+                : base.HasFeature(featureId);
         }
 
         /// <summary>
