@@ -83,6 +83,7 @@ namespace Hangfire.Storage.SQLite
 
             _completed = true;
             _heartbeatTimer?.Dispose();
+            _heartbeatTimer = null;
             Release();
         }
 
@@ -184,7 +185,14 @@ namespace Hangfire.Storage.SQLite
                         Logger.ErrorFormat("Unable to update heartbeat on the resource '{0}'. The resource is not locked or is locked by another owner.", _resource);
 
                         // if we no longer have a lock, stop the heartbeat immediately
-                        _heartbeatTimer?.Dispose();
+                        try
+                        {
+                            _heartbeatTimer?.Dispose();
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // well, already disposed?
+                        }
                         return;
                     }
                 }

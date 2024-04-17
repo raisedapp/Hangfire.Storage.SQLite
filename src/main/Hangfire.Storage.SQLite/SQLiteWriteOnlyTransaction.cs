@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
+using Hangfire.Logging;
 using Hangfire.States;
 using Hangfire.Storage.SQLite.Entities;
 using Newtonsoft.Json;
@@ -17,8 +16,10 @@ namespace Hangfire.Storage.SQLite
 
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
-        private static object _lockObject = new object();
-
+        internal readonly List<IDisposable> _acquiredLocks = new List<IDisposable>();
+        
+        private static readonly ILog Logger = LogProvider.For<SQLiteWriteOnlyTransaction>();
+        
         /// <summary>
         /// </summary>
         /// <param name="connection"></param>
@@ -34,6 +35,15 @@ namespace Hangfire.Storage.SQLite
         private void QueueCommand(Action<HangfireDbContext> action)
         {
             _commandQueue.Enqueue(action);
+        }
+
+        public override void AcquireDistributedLock(string resource, TimeSpan timeout)
+        {
+            var acquiredLock = SQLiteDistributedLock.Acquire(resource, timeout, _dbContext, _dbContext.StorageOptions);
+            lock (_acquiredLocks)
+            {
+                _acquiredLocks.Add(acquiredLock);
+            }
         }
 
         public override void AddJobState(string jobId, IState state)
@@ -113,16 +123,44 @@ namespace Hangfire.Storage.SQLite
 
         public override void Commit()
         {
-            Retry.Twice((attempts) => {
-
-                lock (_lockObject)
-                {
+            try
+            {
+                Retry.Twice((attempts) => {
                     _commandQueue.ToList().ForEach(_ =>
                     {
                         _.Invoke(_dbContext);
                     });
+                });
+            }
+            finally
+            {
+                ReleaseAcquiredLocks();
+            }
+        }
+
+        private void ReleaseAcquiredLocks()
+        {
+            lock (_acquiredLocks)
+            {
+                foreach (var acquiredLock in _acquiredLocks)
+                {
+                    try
+                    {
+                        acquiredLock.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.WarnException("Failed to release a distributed lock", ex);
+                    }
                 }
-            });
+                _acquiredLocks.Clear();
+            }
+        }
+
+        public override void Dispose()
+        {
+            ReleaseAcquiredLocks();
+            base.Dispose();
         }
 
         /// <summary>

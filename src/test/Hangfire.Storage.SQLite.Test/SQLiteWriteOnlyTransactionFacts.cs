@@ -889,6 +889,51 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
+        [Fact]
+        public void AcquireDistributedLock_Returns_Lock()
+        {
+            UseConnection(database =>
+            {
+                using (SQLiteWriteOnlyTransaction transaction = new SQLiteWriteOnlyTransaction(database, _queueProviders))
+                {
+                    transaction.AcquireDistributedLock("key", TimeSpan.Zero);
+                    Assert.NotEmpty(transaction._acquiredLocks);
+                }
+            });
+        }
+        
+        [Fact]
+        public void Committing_Transaction_Frees_Locks()
+        {
+            UseConnection(database =>
+            {
+                using (SQLiteWriteOnlyTransaction transaction = new SQLiteWriteOnlyTransaction(database, _queueProviders))
+                {
+                    transaction.AcquireDistributedLock("key", TimeSpan.Zero);
+                    Assert.NotEmpty(transaction._acquiredLocks);
+                    
+                    transaction.Commit();
+                    Assert.Empty(transaction._acquiredLocks);
+                }
+            });
+        }
+        
+        [Fact]
+        public void Disposing_Transaction_Frees_Locks()
+        {
+            UseConnection(database =>
+            {
+                using (SQLiteWriteOnlyTransaction transaction = new SQLiteWriteOnlyTransaction(database, _queueProviders))
+                {
+                    transaction.AcquireDistributedLock("key", TimeSpan.Zero);
+                    Assert.NotEmpty(transaction._acquiredLocks);
+                    
+                    transaction.Dispose();
+                    Assert.Empty(transaction._acquiredLocks);
+                }
+            });
+        }
+
         private static HangfireJob GetTestJob(HangfireDbContext database, int jobId)
         {
             return database.HangfireJobRepository.FirstOrDefault(x => x.Id == jobId);

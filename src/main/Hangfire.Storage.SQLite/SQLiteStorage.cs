@@ -15,21 +15,21 @@ namespace Hangfire.Storage.SQLite
 
         private readonly SQLiteStorageOptions _storageOptions;
 
-        private readonly Dictionary<string, bool> _features = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+        private static readonly Dictionary<string, bool> _features = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
         {
-            { "Storage.ExtendedApi", false },
-            { "Job.Queue", true },
-            { "Connection.GetUtcDateTime", false },
-            { "Connection.BatchedGetFirstByLowestScoreFromSet", false },
-            { "Connection.GetSetContains", true },
-            { "Connection.GetSetCount.Limited", false },
-            { "BatchedGetFirstByLowestScoreFromSet", false },
-            { "Transaction.AcquireDistributedLock", true },
-            { "Transaction.CreateJob", true },
-            { "Transaction.SetJobParameter", true },
-            { "TransactionalAcknowledge:InMemoryFetchedJob", false },
-            { "Monitoring.DeletedStateGraphs", false },
-            { "Monitoring.AwaitingJobs", false }
+            { JobStorageFeatures.ExtendedApi, true },
+            { JobStorageFeatures.JobQueueProperty, true },
+            { JobStorageFeatures.Connection.GetUtcDateTime, true },
+            { JobStorageFeatures.Connection.BatchedGetFirstByLowest, true },
+            { "BatchedGetFirstByLowestScoreFromSet", true }, // ^-- legacy name?
+            { JobStorageFeatures.Connection.GetSetContains, true },
+            { JobStorageFeatures.Connection.LimitedGetSetCount, true },
+            { JobStorageFeatures.Transaction.AcquireDistributedLock, true },
+            { JobStorageFeatures.Transaction.CreateJob, false }, // NOTE: implement SQLiteWriteOnlyTransaction.CreateJob(...)
+            { JobStorageFeatures.Transaction.SetJobParameter, false }, // NOTE: implement SQLiteWriteOnlyTransaction.SetJobParameter(...)
+            { JobStorageFeatures.Transaction.RemoveFromQueue(typeof(SQLiteFetchedJob)), false }, // NOTE: implement SQLiteWriteOnlyTransaction.RemoveFromQueue(...)
+            { JobStorageFeatures.Monitoring.DeletedStateGraphs, false },
+            { JobStorageFeatures.Monitoring.AwaitingJobs, false }
         };
 
         private ConcurrentQueue<PooledHangfireDbContext> _dbContextPool = new ConcurrentQueue<PooledHangfireDbContext>();

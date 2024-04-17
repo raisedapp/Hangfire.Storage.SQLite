@@ -231,6 +231,28 @@ namespace Hangfire.Storage.SQLite
                 .SetRepository
                 .Count(_ => _.Key == key);
         }
+        
+        public override long GetSetCount(IEnumerable<string> keys, int limit)
+        {
+            if (keys == null)
+            {
+                throw new ArgumentNullException(nameof(keys));
+            }
+            
+            var count = DbContext
+                .SetRepository
+                .Where(_ => keys.Contains(_.Key))
+                .Take(limit)
+                .Count();
+            return Math.Min(count, limit);
+        }
+
+        public override bool GetSetContains(string key, string value)
+        {
+            return DbContext
+                .SetRepository
+                .Any(x => x.Key == key && x.Value == value);
+        }
 
         public override string GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore)
         {
@@ -255,6 +277,32 @@ namespace Hangfire.Storage.SQLite
                 .OrderBy(_ => _.Score)
                 .Select(_ => _.Value)
                 .FirstOrDefault();
+        }
+
+        public override List<string> GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore, int count)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (toScore < fromScore)
+            {
+                throw new ArgumentException("The 'toScore' value must be higher or equal to the 'fromScore' value.");
+            }
+
+            var fromScoreDec = fromScore.ToInt64();
+            var toScoreDec = toScore.ToInt64();
+
+            return DbContext
+                .SetRepository
+                .Where(_ => _.Key == key &&
+                            _.Score >= fromScoreDec &&
+                            _.Score <= toScoreDec)
+                .OrderBy(_ => _.Score)
+                .Select(_ => _.Value)
+                .Take(count)
+                .ToList();
         }
 
         public override JobData GetJobData(string jobId)
@@ -434,7 +482,7 @@ namespace Hangfire.Storage.SQLite
 
         public override void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            using (var transaction = new SQLiteWriteOnlyTransaction(DbContext, _queueProviders))
+            using (var transaction = CreateWriteTransaction())
             {
                 transaction.SetRangeInHash(key, keyValuePairs);
                 transaction.Commit();
@@ -559,6 +607,11 @@ namespace Hangfire.Storage.SQLite
                 .FirstOrDefault();
 
             return result != DateTime.MinValue ? result - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
+        }
+
+        public override DateTime GetUtcDateTime()
+        {
+            return DateTime.UtcNow;
         }
 
         public override List<string> GetRangeFromList(string key, int startingFrom, int endingAt)
