@@ -1,18 +1,16 @@
 using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using System;
 using System.Threading;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class CountersAggregatorFacts
+    public class CountersAggregatorFacts : SqliteInMemoryTestBase
     {
         [Fact]
         public void CountersAggregatorExecutesProperly()
         {
-            var storage = ConnectionUtils.CreateStorage();
-            using (var connection = (HangfireSQLiteConnection)storage.GetConnection())
+            using (var connection = (HangfireSQLiteConnection)Storage.GetConnection())
             {
                 // Arrange
                 connection.DbContext.Database.Insert(new Counter
@@ -23,7 +21,7 @@ namespace Hangfire.Storage.SQLite.Test
                     ExpireAt = DateTime.UtcNow.AddHours(1)
                 });
 
-                var aggregator = new CountersAggregator(storage, TimeSpan.Zero);
+                var aggregator = new CountersAggregator(Storage, TimeSpan.Zero);
                 var cts = new CancellationTokenSource();
                 cts.Cancel();
 

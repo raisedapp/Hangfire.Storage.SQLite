@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class SQLiteDistributedLockFacts
+    public class SQLiteDistributedLockFacts : SqliteInMemoryTestBase
     {
         [Fact]
         public void Ctor_ThrowsAnException_WhenResourceIsNull()
@@ -117,7 +117,6 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Ctor_WaitForLock_SignaledAtLockRelease()
         {
-            var storage = ConnectionUtils.CreateStorage();
             using var mre = new ManualResetEventSlim();
             var t = NewBackgroundThread(() =>
             {
@@ -128,7 +127,7 @@ namespace Hangfire.Storage.SQLite.Test
                         mre.Set();
                         Thread.Sleep(TimeSpan.FromSeconds(3));
                     }
-                }, storage);
+                });
             });
             UseConnection(database =>
             {
@@ -145,7 +144,7 @@ namespace Hangfire.Storage.SQLite.Test
                 }
 
                 t.Join();
-            }, storage);
+            });
         }
 
         [Fact]
@@ -306,15 +305,15 @@ namespace Hangfire.Storage.SQLite.Test
             }
         }
         
-        private static void UseConnection(Action<HangfireDbContext> action, SQLiteStorage storage = null)
+        private void UseConnection(Action<HangfireDbContext> action)
         {
-            using var connection = storage?.CreateAndOpenConnection() ?? ConnectionUtils.CreateConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             action(connection);
         }
         
-        private static async Task UseConnectionAsync(Func<HangfireDbContext, Task> func, SQLiteStorage storage = null)
+        private async Task UseConnectionAsync(Func<HangfireDbContext, Task> func)
         {
-            using var connection = storage?.CreateAndOpenConnection() ?? ConnectionUtils.CreateConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             await func(connection);
         }
     }

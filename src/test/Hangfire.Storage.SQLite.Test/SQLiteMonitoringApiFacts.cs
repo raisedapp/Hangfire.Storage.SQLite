@@ -1,7 +1,6 @@
 ﻿using Hangfire.Common;
 using Hangfire.States;
 using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using Moq;
 using Newtonsoft.Json;
 using System;
@@ -10,7 +9,7 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class SQLiteMonitoringApiFacts
+    public class SQLiteMonitoringApiFacts : SqliteInMemoryTestBase
     {
         private const string DefaultQueue = "default";
         private const string FetchedStateName = "Fetched";
@@ -282,9 +281,8 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseMonitoringApi(Action<HangfireDbContext, SQLiteMonitoringApi> action)
         {
-            using var storage = ConnectionUtils.CreateStorage();
-            var connection = new SQLiteMonitoringApi(storage, _providers);
-            using var dbContext = storage.CreateAndOpenConnection();
+            var connection = new SQLiteMonitoringApi(Storage, _providers);
+            using var dbContext = Storage.CreateAndOpenConnection();
             action(dbContext, connection);
         }
 

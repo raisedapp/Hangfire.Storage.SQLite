@@ -77,6 +77,7 @@ namespace Hangfire.Storage.SQLite
 
             using (var dbContext = CreateAndOpenConnection())
             {
+                dbContext.Migrate();
                 _databasePath = dbContext.Database.DatabasePath;
                 // Use this to initialize the database as soon as possible
                 // in case of error, the user will immediately get an exception at startup

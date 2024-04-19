@@ -12,17 +12,17 @@ namespace Hangfire.Storage.SQLite.Test.Utils
             return CreateStorage(storageOptions);
         }
 
+        /// <summary>
+        /// For multi-threaded tests make sure to call <see cref="SQLiteStorage.CreateAndOpenConnection"/> per Thread.
+        /// For proper testing always ensure that at least ONE in-memory connection is alive
+        /// so that the in-memory database will not be deleted unexpectedly
+        /// </summary>
         public static SQLiteStorage CreateStorage(SQLiteStorageOptions storageOptions)
         {
-            // See SQLite Docs: https://www.sqlite.org/c3ref/c_open_autoproxy.html
-            // const SQLiteOpenFlags SQLITE_OPEN_MEMORY = (SQLiteOpenFlags) 0x00000080;
-            const SQLiteOpenFlags SQLITE_OPEN_URI = (SQLiteOpenFlags) 0x00000040;
             const SQLiteOpenFlags flags = // open the database in memory
-                // SQLITE_OPEN_MEMORY |
-                // SQLiteOpenFlags.SharedCache |
-                // for whatever reason, if we don't use URI-mode,
-                // shared in-memory databases dont work properly.
-                SQLITE_OPEN_URI |
+                // URI Mode is required to have multiple separate-inmemory
+                // databases, and allow shared access
+                (SQLiteOpenFlags) SQLitePCL.raw.SQLITE_OPEN_URI |
                 // open the database in read/write mode
                 SQLiteOpenFlags.ReadWrite |
                 // create the database if it doesn't exist
@@ -39,16 +39,6 @@ namespace Hangfire.Storage.SQLite.Test.Utils
                         BusyTimeout = TimeSpan.FromSeconds(10),
                     }),
                 storageOptions);
-        }
-
-        /// <summary>
-        /// Only use this if you have a single thread.
-        /// For multi-threaded tests, use <see cref="CreateStorage()"/> directly and
-        /// then call <see cref="SQLiteStorage.CreateAndOpenConnection"/> per Thread.
-        /// </summary>
-        public static HangfireDbContext CreateConnection()
-        {
-            return CreateStorage().CreateAndOpenConnection();
         }
     }
 }

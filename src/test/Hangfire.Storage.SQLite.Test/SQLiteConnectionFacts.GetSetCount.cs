@@ -1,14 +1,5 @@
-﻿using Hangfire.Common;
-using Hangfire.Server;
-using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
-using Moq;
-using Newtonsoft.Json;
+﻿using Hangfire.Storage.SQLite.Entities;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test

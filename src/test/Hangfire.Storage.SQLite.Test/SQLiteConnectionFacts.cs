@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public partial class HangfireSQLiteConnectionFacts
+    public partial class HangfireSQLiteConnectionFacts : SqliteInMemoryTestBase
     {
         private readonly Mock<IPersistentJobQueue> _queue;
         private readonly PersistentJobQueueProviderCollection _providers;
@@ -41,7 +41,7 @@ namespace Hangfire.Storage.SQLite.Test
         public void Ctor_ThrowsAnException_WhenProvidersCollectionIsNull()
         {
             var exception = Assert.Throws<ArgumentNullException>(
-                () => new HangfireSQLiteConnection(ConnectionUtils.CreateConnection(), null));
+                () => new HangfireSQLiteConnection(Storage.CreateAndOpenConnection(), null));
 
             Assert.Equal("queueProviders", exception.ParamName);
         }
@@ -1449,7 +1449,7 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseConnection(Action<HangfireDbContext, HangfireSQLiteConnection> action)
         {
-            using var database = ConnectionUtils.CreateConnection();
+            using var database = Storage.CreateAndOpenConnection();
             using var connection = new HangfireSQLiteConnection(database, _providers);
             action(database, connection);
         }
