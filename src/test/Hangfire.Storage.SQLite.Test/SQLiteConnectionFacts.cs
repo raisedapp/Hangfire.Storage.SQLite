@@ -117,7 +117,7 @@ namespace Hangfire.Storage.SQLite.Test
             {
                 var exception = Assert.Throws<ArgumentNullException>(
                     () => connection.CreateExpiredJob(
-                        Job.FromExpression(() => SampleMethod("hello")),
+                        Job.FromExpression(() => TestJobClass.SampleMethod("hello")),
                         null,
                         DateTime.UtcNow,
                         TimeSpan.Zero));
@@ -133,7 +133,7 @@ namespace Hangfire.Storage.SQLite.Test
             {
                 var createdAt = new DateTime(2012, 12, 12, 0, 0, 0, 0, DateTimeKind.Utc);
                 var jobId = connection.CreateExpiredJob(
-                    Job.FromExpression(() => SampleMethod("Hello")),
+                    Job.FromExpression(() => TestJobClass.SampleMethod("Hello")),
                     new Dictionary<string, string> { { "Key1", "Value1" }, { "Key2", "Value2" } },
                     createdAt,
                     TimeSpan.FromDays(1));
@@ -152,7 +152,7 @@ namespace Hangfire.Storage.SQLite.Test
                 invocationData.Arguments = databaseJob.Arguments;
 
                 var job = invocationData.DeserializeJob();
-                Assert.Equal(typeof(HangfireSQLiteConnectionFacts), job.Type);
+                Assert.Equal(typeof(TestJobClass), job.Type);
                 Assert.Equal("SampleMethod", job.Method.Name);
                 Assert.Equal("Hello", job.Args[0]);
 
@@ -193,7 +193,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseConnection((database, connection) =>
             {
-                var job = Job.FromExpression(() => SampleMethod("wrong"));
+                var job = Job.FromExpression(() => TestJobClass.SampleMethod("wrong"));
 
                 var hangfireJob = new HangfireJob
                 {
@@ -1454,6 +1454,11 @@ namespace Hangfire.Storage.SQLite.Test
             action(database, connection);
         }
 
+        
+    }
+
+    public class TestJobClass
+    {
         public static void SampleMethod(string arg)
         {
             Debug.WriteLine(arg);
