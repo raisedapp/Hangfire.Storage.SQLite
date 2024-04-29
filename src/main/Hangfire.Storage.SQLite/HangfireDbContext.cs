@@ -50,40 +50,44 @@ namespace Hangfire.Storage.SQLite
         {
             StorageOptions = storageOptions;
 
-            TryFewTimesDueToConcurrency(() => InitializePragmas(storageOptions));
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<AggregatedCounter>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<Counter>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<HangfireJob>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<HangfireList>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<Hash>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<JobParameter>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<JobQueue>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<HangfireServer>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<Set>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<State>());
-            TryFewTimesDueToConcurrency(() => Database.CreateTable<DistributedLock>());
-            
-            void TryFewTimesDueToConcurrency(Action action, int times = 10)
-            {
-                var current = 0;
-                while (current < times)
-                {
-                    try
-                    {
-                        action();
-                        return;
-                    }
-                    catch (SQLiteException e) when (e.Result == SQLite3.Result.Locked)
-                    {
-                        // This can happen if too many connections are opened
-                        // at the same time, trying to create tables
-                        Thread.Sleep(10);
-                    }
-                    current++;
-                }
-            }
+            TryFewTimesDueToConcurrency(state => state.Item1.InitializePragmas(state.storageOptions),
+                (this, storageOptions));
         }
 
+        public void Migrate()
+        {
+            TryFewTimesDueToConcurrency(db => db.CreateTable<AggregatedCounter>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<Counter>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<HangfireJob>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<HangfireList>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<Hash>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<JobParameter>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<JobQueue>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<HangfireServer>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<Set>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<State>(), Database);
+            TryFewTimesDueToConcurrency(db => db.CreateTable<DistributedLock>(), Database);
+        }
+        
+        static void TryFewTimesDueToConcurrency<TState>(Action<TState> action, TState state, int times = 10)
+        {
+            var current = 0;
+            while (current < times)
+            {
+                try
+                {
+                    action(state);
+                    return;
+                }
+                catch (SQLiteException e) when (e.Result == SQLite3.Result.Locked)
+                {
+                    // This can happen if too many connections are opened
+                    // at the same time, trying to create tables
+                    Thread.Sleep(10);
+                }
+                current++;
+            }
+        }
 
         private void InitializePragmas(SQLiteStorageOptions storageOptions)
         {

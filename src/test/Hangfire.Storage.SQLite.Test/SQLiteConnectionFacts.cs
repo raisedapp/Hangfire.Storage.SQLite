@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class HangfireSQLiteConnectionFacts
+    public partial class HangfireSQLiteConnectionFacts : SqliteInMemoryTestBase
     {
         private readonly Mock<IPersistentJobQueue> _queue;
         private readonly PersistentJobQueueProviderCollection _providers;
@@ -41,7 +41,7 @@ namespace Hangfire.Storage.SQLite.Test
         public void Ctor_ThrowsAnException_WhenProvidersCollectionIsNull()
         {
             var exception = Assert.Throws<ArgumentNullException>(
-                () => new HangfireSQLiteConnection(ConnectionUtils.CreateConnection(), null));
+                () => new HangfireSQLiteConnection(Storage.CreateAndOpenConnection(), null));
 
             Assert.Equal("queueProviders", exception.ParamName);
         }
@@ -117,7 +117,7 @@ namespace Hangfire.Storage.SQLite.Test
             {
                 var exception = Assert.Throws<ArgumentNullException>(
                     () => connection.CreateExpiredJob(
-                        Job.FromExpression(() => SampleMethod("hello")),
+                        Job.FromExpression(() => TestJobClass.SampleMethod("hello")),
                         null,
                         DateTime.UtcNow,
                         TimeSpan.Zero));
@@ -133,7 +133,7 @@ namespace Hangfire.Storage.SQLite.Test
             {
                 var createdAt = new DateTime(2012, 12, 12, 0, 0, 0, 0, DateTimeKind.Utc);
                 var jobId = connection.CreateExpiredJob(
-                    Job.FromExpression(() => SampleMethod("Hello")),
+                    Job.FromExpression(() => TestJobClass.SampleMethod("Hello")),
                     new Dictionary<string, string> { { "Key1", "Value1" }, { "Key2", "Value2" } },
                     createdAt,
                     TimeSpan.FromDays(1));
@@ -152,7 +152,7 @@ namespace Hangfire.Storage.SQLite.Test
                 invocationData.Arguments = databaseJob.Arguments;
 
                 var job = invocationData.DeserializeJob();
-                Assert.Equal(typeof(HangfireSQLiteConnectionFacts), job.Type);
+                Assert.Equal(typeof(TestJobClass), job.Type);
                 Assert.Equal("SampleMethod", job.Method.Name);
                 Assert.Equal("Hello", job.Args[0]);
 
@@ -193,7 +193,7 @@ namespace Hangfire.Storage.SQLite.Test
         {
             UseConnection((database, connection) =>
             {
-                var job = Job.FromExpression(() => SampleMethod("wrong"));
+                var job = Job.FromExpression(() => TestJobClass.SampleMethod("wrong"));
 
                 var hangfireJob = new HangfireJob
                 {
@@ -472,73 +472,6 @@ namespace Hangfire.Storage.SQLite.Test
         }
 
         [Fact]
-        public void GetFirstByLowestScoreFromSet_ThrowsAnException_WhenKeyIsNull()
-        {
-            UseConnection((database, connection) =>
-            {
-                var exception = Assert.Throws<ArgumentNullException>(
-                    () => connection.GetFirstByLowestScoreFromSet(null, 0, 1));
-
-                Assert.Equal("key", exception.ParamName);
-            });
-        }
-
-        [Fact]
-        public void GetFirstByLowestScoreFromSet_ThrowsAnException_ToScoreIsLowerThanFromScore()
-        {
-            UseConnection((database, connection) => Assert.Throws<ArgumentException>(
-                () => connection.GetFirstByLowestScoreFromSet("key", 0, -1)));
-        }
-
-        [Fact]
-        public void GetFirstByLowestScoreFromSet_ReturnsNull_WhenTheKeyDoesNotExist()
-        {
-            UseConnection((database, connection) =>
-            {
-                var result = connection.GetFirstByLowestScoreFromSet(
-                    "key", 0, 1);
-
-                Assert.Null(result);
-            });
-        }
-
-        [Fact]
-        public void GetFirstByLowestScoreFromSet_ReturnsTheValueWithTheLowestScore()
-        {
-            UseConnection((database, connection) =>
-            {
-                database.Database.Insert(new Set
-                {
-                    Key = "key",
-                    Score = 1.0m,
-                    Value = "1.0"
-                });
-                database.Database.Insert(new Set
-                {
-                    Key = "key",
-                    Score = -1.0m,
-                    Value = "-1.0"
-                });
-                database.Database.Insert(new Set
-                {
-                    Key = "key",
-                    Score = -5.0m,
-                    Value = "-5.0"
-                });
-                database.Database.Insert(new Set
-                {
-                    Key = "another-key",
-                    Score = -2.0m,
-                    Value = "-2.0"
-                });
-
-                var result = connection.GetFirstByLowestScoreFromSet("key", -1.0, 3.0);
-
-                Assert.Equal("-1.0", result);
-            });
-        }
-
-        [Fact]
         public void AnnounceServer_ThrowsAnException_WhenServerIdIsNull()
         {
             UseConnection((database, connection) =>
@@ -771,6 +704,28 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
+        [Theory]
+        [InlineData("v1", true)]
+        [InlineData("v2", false)]
+        public void GetSetContains_Returns_True_If_Value_Found(string value, bool contains)
+        {
+            UseConnection((database, connection) =>
+            {
+                // Arrange
+                database.Database.Insert(new Set
+                {
+                    Key = "list-1",
+                    Value = "v1"
+                });
+
+                // Act
+                var result = connection.GetSetContains("list-1", value);
+
+                // Assert
+                Assert.Equal(contains, result);
+            });
+        }
+
         [Fact]
         public void SetRangeInHash_ThrowsAnException_WhenKeyIsNull()
         {
@@ -864,53 +819,6 @@ namespace Hangfire.Storage.SQLite.Test
                 Assert.Equal(2, result.Count);
                 Assert.Equal("Value1", result["Key1"]);
                 Assert.Equal("Value2", result["Key2"]);
-            });
-        }
-
-        [Fact]
-        public void GetSetCount_ThrowsAnException_WhenKeyIsNull()
-        {
-            UseConnection((database, connection) =>
-            {
-                Assert.Throws<ArgumentNullException>(
-                    () => connection.GetSetCount(null));
-            });
-        }
-
-        [Fact]
-        public void GetSetCount_ReturnsZero_WhenSetDoesNotExist()
-        {
-            UseConnection((database, connection) =>
-            {
-                var result = connection.GetSetCount("my-set");
-                Assert.Equal(0, result);
-            });
-        }
-
-        [Fact]
-        public void GetSetCount_ReturnsNumberOfElements_InASet()
-        {
-            UseConnection((database, connection) =>
-            {
-                database.Database.Insert(new Set
-                {
-                    Key = "set-1",
-                    Value = "value-1"
-                });
-                database.Database.Insert(new Set
-                {
-                    Key = "set-2",
-                    Value = "value-1"
-                });
-                database.Database.Insert(new Set
-                {
-                    Key = "set-1",
-                    Value = "value-2"
-                });
-
-                var result = connection.GetSetCount("set-1");
-
-                Assert.Equal(2, result);
             });
         }
 
@@ -1523,13 +1431,34 @@ namespace Hangfire.Storage.SQLite.Test
                 Assert.Equal(new[] { "5", "4", "3", "1" }, result);
             });
         }
+
+        [Fact]
+        public void GetUtcDateTime_IsSupported()
+        {
+            UseConnection((_, conn) =>
+            {
+                var start = DateTime.UtcNow;
+
+                // Act
+                var utcDateTime = conn.GetUtcDateTime();
+                var end = DateTime.UtcNow;
+
+                Assert.InRange(utcDateTime, start, end);
+            });
+        }
+
         private void UseConnection(Action<HangfireDbContext, HangfireSQLiteConnection> action)
         {
-            using var database = ConnectionUtils.CreateConnection();
+            using var database = Storage.CreateAndOpenConnection();
             using var connection = new HangfireSQLiteConnection(database, _providers);
             action(database, connection);
         }
 
+        
+    }
+
+    public class TestJobClass
+    {
         public static void SampleMethod(string arg)
         {
             Debug.WriteLine(arg);

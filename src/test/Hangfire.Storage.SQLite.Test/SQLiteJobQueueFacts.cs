@@ -1,5 +1,4 @@
 using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using System;
 using System.Linq;
 using System.Threading;
@@ -7,7 +6,7 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class SQLiteJobQueueFacts
+    public class SQLiteJobQueueFacts : SqliteInMemoryTestBase
     {
         private static readonly string[] DefaultQueues = { "default" };
 
@@ -331,9 +330,9 @@ namespace Hangfire.Storage.SQLite.Test
             return new SQLiteJobQueue(connection, new SQLiteStorageOptions());
         }
 
-        private static void UseConnection(Action<HangfireDbContext> action)
+        private void UseConnection(Action<HangfireDbContext> action)
         {
-            using var connection = ConnectionUtils.CreateConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             action(connection);
         }
     }

@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class SQLiteWriteOnlyTransactionFacts
+    public class SQLiteWriteOnlyTransactionFacts : SqliteInMemoryTestBase
     {
         private readonly PersistentJobQueueProviderCollection _queueProviders;
 
@@ -34,7 +34,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Ctor_ThrowsAnException_IfProvidersCollectionIsNull()
         {
-            var exception = Assert.Throws<ArgumentNullException>(() => new SQLiteWriteOnlyTransaction(ConnectionUtils.CreateConnection(), null));
+            var exception = Assert.Throws<ArgumentNullException>(() => new SQLiteWriteOnlyTransaction(Storage.CreateAndOpenConnection(), null));
 
             Assert.Equal("queueProviders", exception.ParamName);
         }
@@ -889,6 +889,51 @@ namespace Hangfire.Storage.SQLite.Test
             });
         }
 
+        [Fact]
+        public void AcquireDistributedLock_Returns_Lock()
+        {
+            UseConnection(database =>
+            {
+                using (SQLiteWriteOnlyTransaction transaction = new SQLiteWriteOnlyTransaction(database, _queueProviders))
+                {
+                    transaction.AcquireDistributedLock("key", TimeSpan.Zero);
+                    Assert.NotEmpty(transaction._acquiredLocks);
+                }
+            });
+        }
+        
+        [Fact]
+        public void Committing_Transaction_Frees_Locks()
+        {
+            UseConnection(database =>
+            {
+                using (SQLiteWriteOnlyTransaction transaction = new SQLiteWriteOnlyTransaction(database, _queueProviders))
+                {
+                    transaction.AcquireDistributedLock("key", TimeSpan.Zero);
+                    Assert.NotEmpty(transaction._acquiredLocks);
+                    
+                    transaction.Commit();
+                    Assert.Empty(transaction._acquiredLocks);
+                }
+            });
+        }
+        
+        [Fact]
+        public void Disposing_Transaction_Frees_Locks()
+        {
+            UseConnection(database =>
+            {
+                using (SQLiteWriteOnlyTransaction transaction = new SQLiteWriteOnlyTransaction(database, _queueProviders))
+                {
+                    transaction.AcquireDistributedLock("key", TimeSpan.Zero);
+                    Assert.NotEmpty(transaction._acquiredLocks);
+                    
+                    transaction.Dispose();
+                    Assert.Empty(transaction._acquiredLocks);
+                }
+            });
+        }
+
         private static HangfireJob GetTestJob(HangfireDbContext database, int jobId)
         {
             return database.HangfireJobRepository.FirstOrDefault(x => x.Id == jobId);
@@ -911,7 +956,7 @@ namespace Hangfire.Storage.SQLite.Test
 
         private void UseConnection(Action<HangfireDbContext> action)
         {
-            using var connection = ConnectionUtils.CreateConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             action(connection);
         }
 

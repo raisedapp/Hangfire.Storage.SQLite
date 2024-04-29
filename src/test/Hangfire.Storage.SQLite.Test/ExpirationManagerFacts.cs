@@ -1,5 +1,4 @@
 using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,17 +6,14 @@ using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class ExpirationManagerFacts
+    public class ExpirationManagerFacts : SqliteInMemoryTestBase
     {
-        private readonly SQLiteStorage _storage;
-
         private readonly CancellationToken _token;
         private static PersistentJobQueueProviderCollection _queueProviders;
 
         public ExpirationManagerFacts()
         {
-            _storage = ConnectionUtils.CreateStorage();
-            _queueProviders = _storage.QueueProviders;
+            _queueProviders = Storage.QueueProviders;
 
             _token = new CancellationToken(true);
         }
@@ -31,7 +27,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_RemovesOutdatedRecords()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             CreateExpirationEntries(connection, DateTime.UtcNow.AddMonths(-1));
             var manager = CreateManager();
             manager.Execute(_token);
@@ -41,7 +37,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_DoesNotRemoveEntries_WithNoExpirationTimeSet()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             CreateExpirationEntries(connection, null);
             var manager = CreateManager();
             manager.Execute(_token);
@@ -51,7 +47,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_DoesNotRemoveEntries_WithFreshExpirationTime()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             CreateExpirationEntries(connection, DateTime.UtcNow.AddMonths(1));
             var manager = CreateManager();
             manager.Execute(_token);
@@ -61,7 +57,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_Processes_CounterTable()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             connection.Database.Insert(new Counter
             {
                 Id = Guid.NewGuid().ToString(),
@@ -78,7 +74,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_Processes_JobTable()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             connection.Database.Insert(new HangfireJob()
             {
                 InvocationData = "",
@@ -95,7 +91,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_Processes_ListTable()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             connection.Database.Insert(new HangfireList()
             {
                 Key = "key",
@@ -112,7 +108,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_Processes_SetTable()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             connection.Database.Insert(new Set
             {
                 Key = "key",
@@ -131,7 +127,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_Processes_HashTable()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             connection.Database.Insert(new Hash()
             {
                 Key = "key",
@@ -151,7 +147,7 @@ namespace Hangfire.Storage.SQLite.Test
         [Fact]
         public void Execute_Processes_AggregatedCounterTable()
         {
-            using var connection = _storage.CreateAndOpenConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             connection.Database.Insert(new AggregatedCounter
             {
                 Key = "key",
@@ -199,7 +195,7 @@ namespace Hangfire.Storage.SQLite.Test
 
         private ExpirationManager CreateManager()
         {
-            return new ExpirationManager(_storage);
+            return new ExpirationManager(Storage);
         }
 
         private static void Commit(HangfireDbContext connection, Action<SQLiteWriteOnlyTransaction> action)

@@ -1,12 +1,11 @@
 using Hangfire.Storage.SQLite.Entities;
-using Hangfire.Storage.SQLite.Test.Utils;
 using System;
 using System.Linq;
 using Xunit;
 
 namespace Hangfire.Storage.SQLite.Test
 {
-    public class SQLiteFetchedJobFacts
+    public class SQLiteFetchedJobFacts : SqliteInMemoryTestBase
     {
         private const int JobId = 0;
         private const string Queue = "queue";
@@ -153,9 +152,9 @@ namespace Hangfire.Storage.SQLite.Test
             return jobQueue.Id;
         }
 
-        private static void UseConnection(Action<HangfireDbContext> action)
+        private void UseConnection(Action<HangfireDbContext> action)
         {
-            using var connection = ConnectionUtils.CreateConnection();
+            using var connection = Storage.CreateAndOpenConnection();
             action(connection);
         }
     }
